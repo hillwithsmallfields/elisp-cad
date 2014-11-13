@@ -44,6 +44,8 @@
 
 (defmodal arc gcode-mode (xc yc r ang1 ang2))
 
-(provide 'cad-svg)
+(defmodal circle gcode-mode (r))
+
+(provide 'cad-gcode)
 
 ;;; cad-gcode.el ends here
