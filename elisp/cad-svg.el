@@ -44,6 +44,9 @@
 
 (defmodal arc nxml-mode (xc yc r ang1 ang2))
 
+(defmodal circle nxml-mode (r)
+  (insert (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\"/>\n" xc yc r)))
+
 (provide 'cad-svg)
 
 ;;; cad-svg.el ends here
