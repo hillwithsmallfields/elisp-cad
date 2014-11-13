@@ -44,6 +44,8 @@
 
 (defmodal arc ps-mode (xc yc r ang1 ang2))
 
+(defmodal circle ps-mode (r))
+
 (provide 'cad-ps)
 
 ;;; cad-ps.el ends here
