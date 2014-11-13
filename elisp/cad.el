@@ -24,25 +24,54 @@
 
 ;;; Code:
 
+;;;;;;;;;;;;;;;;;;;;;;;
+;; support functions ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; top-level of each drawing ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defmacro drawing (name &body parts)
   "Define a drawing called NAME, made of PARTS."
   )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Forms to use in drawings ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defmacro rotate (angle &body parts)
   "At ANGLE, draw PARTS."
+
   )
 
-(defmacro translate (x y &body parts)
-  "Translated by X Y, draw PARTS."
-  )
+(defmacro translate (xd yd &body parts)
+  "Translated by XD YD, draw PARTS."
+  `(let ((xo (+ xo xd))
+	 (yo (+ yo yd)))
+     ,@parts))
+
+(defmacro scale (xs ys &body parts)
+  "Scaled by XS YS, draw PARTS."
+  `(let ((xx (* xx xs))
+	 (xy (* xy ys))
+	 (yy (* yy ys))
+	 (yx (* yx xs)))
+     ,@parts))
 
 (defmacro row (n step &body parts)
   "Draw N times, with a horizontal interval of STEP, the PARTS."
-  )
+  `(dotimes (i n)
+     (translate (* i ,step) 0
+		,@parts)))
 
 (defmacro column (n step &body parts)
   "Draw N times, with a vertical interval of STEP, the PARTS."
-  )
+  `(dotimes (i n)
+     (translate 0 (* i ,step)
+		,@parts)))
 
 (defmacro grid (nx ny stepx stepy &body parts)
   "Draw a grid of parts, with NX NY of them at STEPX and STEPY intervals.
@@ -62,7 +91,19 @@ All of PARTS are drawn at each position."
 
 ;; todo: line, arc, box, etc
 
-;; todo: render
+;;;;;;;;;;;;;;;
+;; rendering ;;
+;;;;;;;;;;;;;;;
+
+(defun cad-render (symbol)
+  "Render the drawing named by SYMBOL."
+   (let ((xx 1.0)
+	 (xy 0.0)
+	 (yy 1.0)
+	 (yx 0.0)
+	 (xo 0.0)
+	 (yo 0.0))
+))
 
 (provide 'cad)
 ;;; cad.el ends here
