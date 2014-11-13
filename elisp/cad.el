@@ -24,19 +24,49 @@
 
 ;;; Code:
 
+(require 'modal-functions)
+
+(add-to-list 'load-path (file-name-directory load-file-name))
+
+(autoload 'gcode-mode "gcode") ; git clone https://github.com/jasapp/gcode-emacs.git
+(add-to-list 'auto-mode-alist (cons ".tap" 'gcode-mode))
+(eval-after-load "gcode"
+  '(require 'cad-gcode))
+
+(eval-after-load "nxml-mode"
+  '(require 'cad-svg))
+
+(eval-after-load "ps-mode"
+  '(require 'cad-ps))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; support functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
+(defmodel cad-preamble (width height)
+  "Functions to run at the start of rendering a drawing of HEIGHT and WIDTH.")
 
+(defmodel cad-postamble ()
+  "Functions to run at the end of rendering a drawing.")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; top-level of each drawing ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Drawing structure ;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro drawing (name &body parts)
-  "Define a drawing called NAME, made of PARTS."
-  )
+(defmacro drawing (name width height &body parts)
+  "Define a drawing called NAME of WIDTH and HEIGHT, made of PARTS."
+  `(put name 'cad-drawing
+	'(progn
+	   (cad-preamble)
+	   ,@parts
+	   (cad-postamble))))
+
+(defmacro shape (action &body parts)
+  "Define a shape on which ACTION is done, after drawing it from PARTS."
+  `(progn
+     (newpath)
+     ,@parts
+     (,action)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Forms to use in drawings ;;
@@ -89,21 +119,70 @@ The first one is drawn at an angle of THETA, and they are RADIUS away from the c
 All of PARTS are drawn at each position."
   )
 
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Drawing functions ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; These functions are defined separately for gcode, svg, and any
+;;; other output modes.  defmodel makes a despatcher function, which
+;;; is implemented by a mode-specific definition.
+
 ;; todo: line, arc, box, etc
+
+(defmodel newpath ()
+  "Begin a new path.")
+
+(defmodel cutpath ()
+  "Cut the current path.
+For use as the 'action' of the `shape' macro.")
+
+(defmodel engravepath ()
+  "Engrave the current path.
+For use as the 'action' of the `shape' macro.")
+
+(defmodel fillpath ()
+  "Fill the current path.
+For use as the 'action' of the `shape' macro.")
+
+(defmodel moveto (x y)
+  "Move to X Y.
+For use within the `shape' macro.")
+
+(defmodel lineto (x y)
+  "Draw a line from the current point to X Y.
+For use within the `shape' macro.")
+
+(defmodel arc (xc yc r ang1 ang2)
+  "Draw an arc.
+For use within the `shape' macro.")
+
+(defmodel circle (r)
+  "Draw a circle at the current point, of radius R.")
 
 ;;;;;;;;;;;;;;;
 ;; rendering ;;
 ;;;;;;;;;;;;;;;
 
-(defun cad-render (symbol)
-  "Render the drawing named by SYMBOL."
-   (let ((xx 1.0)
-	 (xy 0.0)
-	 (yy 1.0)
-	 (yx 0.0)
-	 (xo 0.0)
-	 (yo 0.0))
-))
+(defun cad-render (symbol file)
+  "Render the drawing named by SYMBOL into FILE."
+  (interactive
+   (let* ((drawing (completing-read "Render drawing: "
+				    cad-drawings
+				    nil t))
+	  (file (read-file-name "Render drawing into file: ")))
+     (list drawing file)))
+  (let ((xx 1.0)
+	(xy 0.0)
+	(yy 1.0)
+	(yx 0.0)
+	(xo 0.0)
+	(yo 0.0)
+	(xc nil)
+	(yc nil))
+    (find-file file)
+    (erase-buffer)
+    (funcall (get symbol 'cad-drawing))
+    (basic-save-buffer)))
 
 (provide 'cad)
 ;;; cad.el ends here
