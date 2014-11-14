@@ -38,7 +38,8 @@
 
 (defmodal fillpath nxml-mode ())
 
-(defmodal moveto nxml-mode (x y))
+(defmodal moveto nxml-mode (x y)
+  (setq xc x yc y))
 
 (defmodal lineto nxml-mode (x y))
 
