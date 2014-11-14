@@ -30,6 +30,24 @@
 (defmodal cad-postamble ps-mode ()
   (insert "showpage\n"))
 
+(defmodal begin-rotate ps-mode (rad deg)
+  (insert (format "gsave\n%f rotate\n" deg)))
+
+(defmodal end-rotate ps-mode ()
+  (insert "grestore\n"))
+
+(defmodal begin-translate ps-mode (xd yd)
+  (insert (format "gsave\n%f %f translate\n" xd yd)))
+
+(defmodal end-translate ps-mode ()
+  (insert "grestore\n"))
+
+(defmodal begin-scale ps-mode (xs ys)
+  (insert (format "gsave\n%f %f scale\n" xd yd)))
+
+(defmodal end-scale ps-mode ()
+  (insert "grestore\n"))
+
 (defmodal newpath ps-mode ())
 
 (defmodal cutpath ps-mode ())
@@ -45,6 +63,8 @@
 (defmodal arc ps-mode (xc yc r ang1 ang2))
 
 (defmodal circle ps-mode (r))
+
+(defmodal rectangle ps-mode (w h))
 
 (provide 'cad-ps)
 
