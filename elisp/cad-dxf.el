@@ -29,6 +29,18 @@
 
 (defmodal cad-postamble dxf-mode ())
 
+(defmodal begin-rotate dxf-mode (rad deg))
+
+(defmodal end-rotate dxf-mode ())
+
+(defmodal begin-translate dxf-mode (xd yd))
+
+(defmodal end-translate dxf-mode ())
+
+(defmodal begin-scale dxf-mode (xs ys))
+
+(defmodal end-scale dxf-mode ())
+
 (defmodal newpath dxf-mode ())
 
 (defmodal cutpath dxf-mode ())
@@ -44,6 +56,8 @@
 (defmodal arc dxf-mode (xc yc r ang1 ang2))
 
 (defmodal circle dxf-mode (r))
+
+(defmodal rectangle dxf-mode (w h))
 
 (provide 'cad-dxf)
 
