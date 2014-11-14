@@ -1,4 +1,4 @@
-;;; dxf.el --- mode for dxf files
+;;; dxf.el --- editing mode for dxf files
 
 ;; Copyright (C) 2014  John Sturdy
 
@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; 
+;; Reference for DXF is at http://images.autodesk.com/adsk/files/acad_dxf0.pdf
 
 ;;; Code:
 
@@ -31,4 +31,5 @@ In the initial version, this is just a renaming of
 definitions to determine the ouput it creates.")
 
 (provide 'dxf)
+
 ;;; dxf.el ends here
