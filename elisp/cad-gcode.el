@@ -30,6 +30,18 @@
 (defmodal cad-postamble gcode-mode ()
   )
 
+(defmodal begin-rotate gcode-mode (rad deg))
+
+(defmodal end-rotate gcode-mode ())
+
+(defmodal begin-translate gcode-mode (xd yd))
+
+(defmodal end-translate gcode-mode ())
+
+(defmodal begin-scale gcode-mode (xs ys))
+
+(defmodal end-scale gcode-mode ())
+
 (defmodal newpath gcode-mode ())
 
 (defmodal cutpath gcode-mode ())
@@ -45,6 +57,8 @@
 (defmodal arc gcode-mode (xc yc r ang1 ang2))
 
 (defmodal circle gcode-mode (r))
+
+(defmodal rectangle gcode-mode (w h))
 
 (provide 'cad-gcode)
 
