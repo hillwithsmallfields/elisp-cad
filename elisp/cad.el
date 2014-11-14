@@ -143,14 +143,14 @@ If the first argument is a symbol, it is used as the drawing action."
 
 (defmacro rotate (angle &rest parts)
   "Rotated by ANGLE, draw PARTS."
-  (let* ((d (degrees-to-radians angle))
+  `(let* ((d (degrees-to-radians ,angle))
 	 (as (sin d))
 	 (ac (cos d)))
     (let ((xx (+ (* xx ac) (* yx as)))
 	  (xy (+ (* xy ac) (* yy as)))
 	  (yx (+ (* yx ac) (* xx as)))
 	  (yy (+ (* yy ac) (* xy as))))
-      (begin-rotate angle d)
+      (begin-rotate ,angle d)
       ,@parts
       (end-rotate))))
 

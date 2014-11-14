@@ -31,6 +31,8 @@
 (defmodal cad-postamble nxml-mode ()
   (insert "</svg>\n"))
 
+;; todo: make these use the <g></g> construct as described at https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Transformations
+
 (defmodal begin-rotate nxml-mode (rad deg))
 
 (defmodal end-rotate nxml-mode ())
@@ -62,16 +64,23 @@
 
 (defmodal arc nxml-mode (xc yc r ang1 ang2))
 
+(defun svg-fill-stroke ()
+  "Return the style string for an svg shape."
+  (if (eq action 'fillpath)
+      (format "fill=\"%s\"" cad-colour)
+    (format "stroke=\"%s\" fill=\"none\"" cad-colour)))
+
 (defmodal circle nxml-mode (r)
   (insert (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" %s/>\n"
 		  xc yc
 		  r
-		  (if (eq action 'fillpath)
-		      (format "fill=\"%s\"" cad-colour)
-		    (format "stroke=\"%s\" fill=\"none\"" cad-colour)))))
+		  (svg-fill-stroke))))
 
 (defmodal rectangle nxml-mode (w h)
-  )
+  (insert (format "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" %s/>\n"
+		  xc yc
+		  w h
+		  (svg-fill-stroke))))
 
 (provide 'cad-svg)
 

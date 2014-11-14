@@ -31,5 +31,16 @@
 	  (moveto 200 200)
 	  (circle 100)))
 
+(drawing just-a-rectangle cutpath 400 400
+	 (shape
+	  (moveto 200 200)
+	  (rectangle 150 100)))
+
+(drawing tilted-rectangle cutpath 400 400
+	 (shape
+	  (rotate 15
+		  (moveto 200 200)
+		  (rectangle 150 100))))
+
 (provide 'cad-example)
 ;;; cad-example.el ends here
