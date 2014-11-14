@@ -33,6 +33,9 @@
 (eval-after-load "gcode"
   '(require 'cad-gcode))
 
+(autoload 'dxf-mode "dxf")
+(add-to-list 'auto-mode-alist (cons ".dxf" 'dxf-mode))
+
 (eval-after-load "nxml-mode"
   '(require 'cad-svg))
 
@@ -53,15 +56,21 @@
 ;; Drawing structure ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro drawing (name width height &body parts)
-  "Define a drawing called NAME of WIDTH and HEIGHT, made of PARTS."
-  `(put name 'cad-drawing
-	'(progn
-	   (cad-preamble)
-	   ,@parts
-	   (cad-postamble))))
+(defvar cad-drawings nil
+  "List of symbols naming defined drawings.
+The drawing is held on the 'cad-drawing property of each symbol.")
 
-(defmacro shape (action &body parts)
+(defmacro drawing (name width height &rest parts)
+  "Define a drawing called NAME of WIDTH and HEIGHT, made of PARTS."
+  `(progn
+     (put ',name 'cad-drawing
+	  '(progn
+	     (cad-preamble ,width ,height)
+	     ,@parts
+	     (cad-postamble)))
+     (add-to-list 'cad-drawings '(,name))))
+
+(defmacro shape (action &rest parts)
   "Define a shape on which ACTION is done, after drawing it from PARTS."
   `(progn
      (newpath)
@@ -72,18 +81,18 @@
 ;; Forms to use in drawings ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro rotate (angle &body parts)
+(defmacro rotate (angle &rest parts)
   "At ANGLE, draw PARTS."
 
   )
 
-(defmacro translate (xd yd &body parts)
+(defmacro translate (xd yd &rest parts)
   "Translated by XD YD, draw PARTS."
   `(let ((xo (+ xo xd))
 	 (yo (+ yo yd)))
      ,@parts))
 
-(defmacro scale (xs ys &body parts)
+(defmacro scale (xs ys &rest parts)
   "Scaled by XS YS, draw PARTS."
   `(let ((xx (* xx xs))
 	 (xy (* xy ys))
@@ -91,29 +100,29 @@
 	 (yx (* yx xs)))
      ,@parts))
 
-(defmacro row (n step &body parts)
+(defmacro row (n step &rest parts)
   "Draw N times, with a horizontal interval of STEP, the PARTS."
   `(dotimes (i n)
      (translate (* i ,step) 0
 		,@parts)))
 
-(defmacro column (n step &body parts)
+(defmacro column (n step &rest parts)
   "Draw N times, with a vertical interval of STEP, the PARTS."
   `(dotimes (i n)
      (translate 0 (* i ,step)
 		,@parts)))
 
-(defmacro grid (nx ny stepx stepy &body parts)
+(defmacro grid (nx ny stepx stepy &rest parts)
   "Draw a grid of parts, with NX NY of them at STEPX and STEPY intervals.
 PARTS are all drawn at these positions."
   )
 
-(defmacro arcstep (n theta radius delta &body parts)
+(defmacro arcstep (n theta radius delta &rest parts)
   "Draw N copies of the parts, with a first angle of THETA, RADIUS away from the current point, and a step angle of DELTA.
 All of PARTS are drawn at each position."
   )
 
-(defmacro circlestep (n theta radius delta &body parts)
+(defmacro circlestep (n theta radius delta &rest parts)
   "Draw N copies of the parts, arranged in a circle.
 The first one is drawn at an angle of THETA, and they are RADIUS away from the current position.
 All of PARTS are drawn at each position."
@@ -181,7 +190,7 @@ For use within the `shape' macro.")
 	(yc nil))
     (find-file file)
     (erase-buffer)
-    (funcall (get symbol 'cad-drawing))
+    (eval (get (intern symbol) 'cad-drawing))
     (basic-save-buffer)))
 
 (provide 'cad)
