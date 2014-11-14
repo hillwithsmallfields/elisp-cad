@@ -25,7 +25,7 @@
 ;;; Code:
 
 (defmodal cad-preamble gcode-mode (width height)
-  )
+  (error "Drawing to gcode not yet implemented"))
 
 (defmodal cad-postamble gcode-mode ()
   )
