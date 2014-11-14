@@ -42,6 +42,10 @@
 
 (defmodal end-scale nxml-mode ())
 
+(defmodal begin-colour nxml-mode (colour))
+
+(defmodal end-colour nxml-mode)
+
 (defmodal newpath nxml-mode ())
 
 (defmodal cutpath nxml-mode ())

@@ -42,6 +42,10 @@
 
 (defmodal end-scale gcode-mode ())
 
+(defmodal begin-colour gcode-mode (colour))
+
+(defmodal end-colour gcode-mode)
+
 (defmodal newpath gcode-mode ())
 
 (defmodal cutpath gcode-mode ())

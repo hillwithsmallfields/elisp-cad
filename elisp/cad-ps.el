@@ -48,6 +48,10 @@
 (defmodal end-scale ps-mode ()
   (insert "grestore\n"))
 
+(defmodal begin-colour ps-mode (colour))
+
+(defmodal end-colour ps-mode)
+
 (defmodal newpath ps-mode ())
 
 (defmodal cutpath ps-mode ())

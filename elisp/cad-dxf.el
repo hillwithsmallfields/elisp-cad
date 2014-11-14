@@ -41,6 +41,10 @@
 
 (defmodal end-scale dxf-mode ())
 
+(defmodal begin-colour dxf-mode (colour))
+
+(defmodal end-colour dxf-mode)
+
 (defmodal newpath dxf-mode ())
 
 (defmodal cutpath dxf-mode ())

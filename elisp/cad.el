@@ -93,6 +93,9 @@ It is also used as the action at the end of creating a shape.")
   "The default action, for shapes that inherit their action.
 They can override this by defining their own action.")
 
+(defvar cad-colour "black"
+  "The current colour.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; support functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -169,6 +172,13 @@ If the first argument is a symbol, it is used as the drawing action."
      ,@parts
      (end-scale)))
 
+(defmacro colour (col &rest parts)
+  "In COL, draw PARTS."
+  `(let ((cad-colour ,col))
+     (begin-colour ,col)
+     ,@parts
+     (end-colour)))
+
 (defmacro row (n step &rest parts)
   "Draw N times, with a horizontal interval of STEP, the PARTS."
   `(dotimes (i n)
@@ -222,6 +232,12 @@ All of PARTS are drawn at each position."
 
 (defmodel end-scale ()
   "End scaling.")
+
+(defmodel begin-colour (colour)
+  "Begin using COLOUR.")
+
+(defmodel end-colour ()
+  "End using a colour.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Drawing functions ;;
