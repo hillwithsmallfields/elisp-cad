@@ -42,6 +42,57 @@
 (eval-after-load "ps-mode"
   '(require 'cad-ps))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Variables that get rebound ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; We keep the current transformation matrix, PostScript-style, but
+;;; in a collection of separate variables.  Depending on your output
+;;; language, you may either want to use the user-supplied
+;;; co-ordinates directly, or transformed.  If your output language
+;;; has suitable operations (e.g. PostScript), you'll be using them
+;;; directly, your output methods will need to output the
+;;; transformation actions, using modal functions such as begin-rotate
+;;; and end-rotate.  If your output language doesn't support such
+;;; transformation operations (e.g. gcode), leave those functions as
+;;; identity functions, and use the transformed co-ordinates.
+
+(defvar xc nil
+  "The x cursor.")
+
+(defvar yc nil
+  "The y cursor.")
+
+(defvar xx 1.0
+  "The x (in) contribution to the x (out).")
+
+(defvar yx 0.0
+  "The y (in) contribution to the x (out).")
+
+(defvar yy 1.0
+  "The y (in) contribution to the y (out).")
+
+(defvar xy 0.0
+  "The x (in) contribution to the y (out).")
+
+(defvar xo 0.0
+  "The x offset.")
+
+(defvar yo 0.0
+  "The y offset.")
+
+(defvar action 'cutpath
+  "The action to apply to the current path.
+
+This is set at the start of drawing the shape, so that it's
+available for output languages that use it as they go along.
+
+It is also used as the action at the end of creating a shape.")
+
+(defvar default-action 'cutpath
+  "The default action, for shapes that inherit their action.
+They can override this by defining their own action.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; support functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,37 +111,53 @@
   "List of symbols naming defined drawings.
 The drawing is held on the 'cad-drawing property of each symbol.")
 
-(defmacro drawing (name width height &rest parts)
-  "Define a drawing called NAME of WIDTH and HEIGHT, made of PARTS."
+(defmacro drawing (name action width height &rest parts)
+  "Define a drawing called NAME using ACTION of WIDTH and HEIGHT, made of PARTS."
   `(progn
      (put ',name 'cad-drawing
-	  '(progn
+	  '(let ((default-action ,action))
 	     (cad-preamble ,width ,height)
 	     ,@parts
 	     (cad-postamble)))
      (add-to-list 'cad-drawings '(,name))))
 
-(defmacro shape (action &rest parts)
-  "Define a shape on which ACTION is done, after drawing it from PARTS."
-  `(progn
-     (newpath)
-     ,@parts
-     (,action)))
+(defmacro shape (&rest parts)
+  "Define a shape made of PARTS and draw it.
+If the first argument is a symbol, it is used as the drawing action."
+  (if (symbolp (car parts))
+      `(let ((action ,(car parts)))
+	 (newpath)
+	 ,@parts
+	 (,(car parts)))
+    `(let ((action default-action))
+       (newpath)
+       ,@parts
+       (funcall default-action))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Forms to use in drawings ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro rotate (angle &rest parts)
-  "At ANGLE, draw PARTS."
-
-  )
+  "Rotated by ANGLE, draw PARTS."
+  (let* ((d (degrees-to-radians angle))
+	 (as (sin d))
+	 (ac (cos d)))
+    (let ((xx (+ (* xx ac) (* yx as)))
+	  (xy (+ (* xy ac) (* yy as)))
+	  (yx (+ (* yx ac) (* xx as)))
+	  (yy (+ (* yy ac) (* xy as))))
+      (begin-rotate angle d)
+      ,@parts
+      (end-rotate))))
 
 (defmacro translate (xd yd &rest parts)
   "Translated by XD YD, draw PARTS."
   `(let ((xo (+ xo xd))
 	 (yo (+ yo yd)))
-     ,@parts))
+     (begin-translate xd yd)
+     ,@parts
+     (end-translate)))
 
 (defmacro scale (xs ys &rest parts)
   "Scaled by XS YS, draw PARTS."
@@ -98,7 +165,9 @@ The drawing is held on the 'cad-drawing property of each symbol.")
 	 (xy (* xy ys))
 	 (yy (* yy ys))
 	 (yx (* yx xs)))
-     ,@parts))
+     (begin-scale xs ys)
+     ,@parts
+     (end-scale)))
 
 (defmacro row (n step &rest parts)
   "Draw N times, with a horizontal interval of STEP, the PARTS."
@@ -127,6 +196,32 @@ All of PARTS are drawn at each position."
 The first one is drawn at an angle of THETA, and they are RADIUS away from the current position.
 All of PARTS are drawn at each position."
   )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Transformation support functions ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; These functions are defined separately for gcode, svg, and any
+;;; other output modes.  defmodel makes a despatcher function, which
+;;; is implemented by a mode-specific definition.
+
+(defmodel begin-rotate (rad deg)
+  "Begin rotating by RAD or DEG.")
+
+(defmodel end-rotate ()
+  "End a rotation.")
+
+(defmodel begin-translate (xd yd)
+  "Begin a translation by XD YD.")
+
+(defmodel end-translate ()
+  "End a translation.")
+
+(defmodel begin-scale (xs ys)
+  "Begin scaling by XS YS.")
+
+(defmodel end-scale ()
+  "End scaling.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Drawing functions ;;
@@ -167,6 +262,10 @@ For use within the `shape' macro.")
 
 (defmodel circle (r)
   "Draw a circle at the current point, of radius R.")
+
+(defmodel rectangle (w h)
+  "Draw a rectangle at the current point, of W and H.
+The bottom left corner is at the current point.")
 
 ;;;;;;;;;;;;;;;
 ;; rendering ;;
