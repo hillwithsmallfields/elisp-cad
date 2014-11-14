@@ -50,7 +50,7 @@
 
 (defmodal begin-colour ps-mode (colour))
 
-(defmodal end-colour ps-mode)
+(defmodal end-colour ps-mode ())
 
 (defmodal newpath ps-mode ())
 

@@ -118,7 +118,7 @@ The drawing is held on the 'cad-drawing property of each symbol.")
   "Define a drawing called NAME using ACTION of WIDTH and HEIGHT, made of PARTS."
   `(progn
      (put ',name 'cad-drawing
-	  '(let ((default-action ,action))
+	  '(let ((default-action ',action))
 	     (cad-preamble ,width ,height)
 	     ,@parts
 	     (cad-postamble)))
@@ -128,9 +128,9 @@ The drawing is held on the 'cad-drawing property of each symbol.")
   "Define a shape made of PARTS and draw it.
 If the first argument is a symbol, it is used as the drawing action."
   (if (symbolp (car parts))
-      `(let ((action ,(car parts)))
+      `(let ((action ',(car parts)))
 	 (newpath)
-	 ,@parts
+	 ,@(cdr parts)
 	 (,(car parts)))
     `(let ((action default-action))
        (newpath)

@@ -26,10 +26,10 @@
 
 (require 'cad)
 
-(drawing just-a-circle 400 400
-	 (shape cutpath
-		(moveto 200 200)
-		(circle 100)))
+(drawing just-a-circle cutpath 400 400
+	 (shape
+	  (moveto 200 200)
+	  (circle 100)))
 
 (provide 'cad-example)
 ;;; cad-example.el ends here

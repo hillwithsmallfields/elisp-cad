@@ -44,7 +44,7 @@
 
 (defmodal begin-colour gcode-mode (colour))
 
-(defmodal end-colour gcode-mode)
+(defmodal end-colour gcode-mode ())
 
 (defmodal newpath gcode-mode ())
 

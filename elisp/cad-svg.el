@@ -25,7 +25,8 @@
 ;;; Code:
 
 (defmodal cad-preamble nxml-mode (width height)
-  (insert  (format "<svg width=\"%d\" height=\"%d\">\n" width height)))
+  (insert (format "<svg width=\"%d\" height=\"%d\">\n"
+		  width height)))
 
 (defmodal cad-postamble nxml-mode ()
   (insert "</svg>\n"))
@@ -44,7 +45,7 @@
 
 (defmodal begin-colour nxml-mode (colour))
 
-(defmodal end-colour nxml-mode)
+(defmodal end-colour nxml-mode ())
 
 (defmodal newpath nxml-mode ())
 
@@ -62,7 +63,12 @@
 (defmodal arc nxml-mode (xc yc r ang1 ang2))
 
 (defmodal circle nxml-mode (r)
-  (insert (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\"/>\n" xc yc r)))
+  (insert (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" %s/>\n"
+		  xc yc
+		  r
+		  (if (eq action 'fillpath)
+		      (format "fill=\"%s\"" cad-colour)
+		    (format "stroke=\"%s\" fill=\"none\"" cad-colour)))))
 
 (defmodal rectangle nxml-mode (w h)
   )
