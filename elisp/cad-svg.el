@@ -30,6 +30,18 @@
 (defmodal cad-postamble nxml-mode ()
   (insert "</svg>\n"))
 
+(defmodal begin-rotate nxml-mode (rad deg))
+
+(defmodal end-rotate nxml-mode ())
+
+(defmodal begin-translate nxml-mode (xd yd))
+
+(defmodal end-translate nxml-mode ())
+
+(defmodal begin-scale nxml-mode (xs ys))
+
+(defmodal end-scale nxml-mode ())
+
 (defmodal newpath nxml-mode ())
 
 (defmodal cutpath nxml-mode ())
@@ -47,6 +59,9 @@
 
 (defmodal circle nxml-mode (r)
   (insert (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\"/>\n" xc yc r)))
+
+(defmodal rectangle nxml-mode (w h)
+  )
 
 (provide 'cad-svg)
 
