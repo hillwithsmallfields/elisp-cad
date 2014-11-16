@@ -40,7 +40,13 @@
 	 (shape
 	  (rotate 15
 		  (moveto 200 200)
-		  (rectangle 150 100))))
+		  (rectangle 150 100 "tilted"))))
+
+(drawing arc-fragment cutpath 400 400
+	 (shape
+	  (moveto 200 200)
+	  (circle 50)
+	  (arc 200 200 100 0 75)))
 
 (provide 'cad-example)
 ;;; cad-example.el ends here

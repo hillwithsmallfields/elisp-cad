@@ -70,6 +70,8 @@
 
 (defmodal rectangle ps-mode (w h))
 
+(defmodal arc ps-mode (cx cy r a1 a2 &optional label))
+
 (provide 'cad-ps)
 
 ;;; cad-ps.el ends here

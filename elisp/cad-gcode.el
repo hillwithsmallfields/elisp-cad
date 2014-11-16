@@ -64,6 +64,8 @@
 
 (defmodal rectangle gcode-mode (w h))
 
+(defmodal arc gcode-mode (cx cy r a1 a2 &optional label))
+
 (provide 'cad-gcode)
 
 ;;; cad-gcode.el ends here

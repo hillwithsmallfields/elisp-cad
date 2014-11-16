@@ -42,6 +42,13 @@
 (eval-after-load "ps-mode"
   '(require 'cad-ps))
 
+(defvar cad-use-target-transforms t
+  "Whether to get the target language to do the transformations for us.
+This isn't available in all languages.
+
+Enabling this makes for better-styled code in the target language;
+Disabling it is useful for debugging our own transforms.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables that get rebound ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -55,13 +62,15 @@
 ;;; transformation actions, using modal functions such as begin-rotate
 ;;; and end-rotate.  If your output language doesn't support such
 ;;; transformation operations (e.g. gcode), leave those functions as
-;;; identity functions, and use the transformed co-ordinates.
+;;; identity functions, and use the transformed co-ordinates.  Even
+;;; better, provide both possibilities, using
+;;; cad-use-target-transforms to choose between them.
 
 (defvar xc nil
-  "The x cursor.")
+  "The x part of the cursor.")
 
 (defvar yc nil
-  "The y cursor.")
+  "The y part of the cursor.")
 
 (defvar xx 1.0
   "The x (in) contribution to the x (out).")
@@ -96,6 +105,12 @@ They can override this by defining their own action.")
 (defvar cad-colour "black"
   "The current colour.")
 
+(defvar cad-canvas-width nil
+  "The width of the canvas.")
+
+(defvar cad-canvas-height nil
+  "The height of the canvas.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; support functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -105,6 +120,14 @@ They can override this by defining their own action.")
 
 (defmodel cad-postamble ()
   "Functions to run at the end of rendering a drawing.")
+
+(defun tx (rx ry)
+  "Return the X part of the transformed form of RX RY."
+  (+ (* rx xx) (* ry yx) xo))
+
+(defun ty (rx ry)
+  "Return the Y part of the transformed form of RX RY."
+  (+ (* rx xy) (* ry yy) yo))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Drawing structure ;;
@@ -118,7 +141,9 @@ The drawing is held on the 'cad-drawing property of each symbol.")
   "Define a drawing called NAME using ACTION of WIDTH and HEIGHT, made of PARTS."
   `(progn
      (put ',name 'cad-drawing
-	  '(let ((default-action ',action))
+	  '(let ((default-action ',action)
+		 (cad-canvas-width ,width)
+		 (cad-canvas-height ,height))
 	     (cad-preamble ,width ,height)
 	     ,@parts
 	     (cad-postamble)))
@@ -143,14 +168,14 @@ If the first argument is a symbol, it is used as the drawing action."
 
 (defmacro rotate (angle &rest parts)
   "Rotated by ANGLE, draw PARTS."
-  `(let* ((d (degrees-to-radians ,angle))
-	 (as (sin d))
-	 (ac (cos d)))
+  `(let* ((rad (degrees-to-radians ,angle))
+	 (as (sin rad))
+	 (ac (cos rad)))
     (let ((xx (+ (* xx ac) (* yx as)))
 	  (xy (+ (* xy ac) (* yy as)))
 	  (yx (+ (* yx ac) (* xx as)))
 	  (yy (+ (* yy ac) (* xy as))))
-      (begin-rotate ,angle d)
+      (begin-rotate rad ,angle)
       ,@parts
       (end-rotate))))
 
@@ -276,12 +301,17 @@ For use within the `shape' macro.")
   "Draw an arc.
 For use within the `shape' macro.")
 
-(defmodel circle (r)
-  "Draw a circle at the current point, of radius R.")
+(defmodel circle (r &optional label)
+  "Draw a circle at the current point, of radius R.
+An optional LABEL may be given.")
 
-(defmodel rectangle (w h)
+(defmodel rectangle (w h &optional label)
   "Draw a rectangle at the current point, of W and H.
+An optional LABEL may be given.
 The bottom left corner is at the current point.")
+
+(defmodel arc (cx cy r a1 a2 &optional label)
+  "Draw an arc centred at CX CY of radius R between angles A1 and A2.")
 
 ;;;;;;;;;;;;;;;
 ;; rendering ;;

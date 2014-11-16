@@ -63,6 +63,8 @@
 
 (defmodal rectangle dxf-mode (w h))
 
+(defmodal arc dxf-mode (cx cy r a1 a2 &optional label))
+
 (provide 'cad-dxf)
 
 ;;; cad-dxf.el ends here
