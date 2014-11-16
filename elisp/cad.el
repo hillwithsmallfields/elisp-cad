@@ -49,46 +49,80 @@ This isn't available in all languages.
 Enabling this makes for better-styled code in the target language;
 Disabling it is useful for debugging our own transforms.")
 
+;;; We keep a current transformation matrix, PostScript-style.
+;;; Depending on your output language, you may either want to use the
+;;; user-supplied co-ordinates directly, or transformed.  If your
+;;; output language has suitable operations (e.g. PostScript), you'll
+;;; be using them directly, your output methods will need to output
+;;; the transformation actions, using modal functions such as
+;;; begin-rotate and end-rotate.  If your output language doesn't
+;;; support such transformation operations (e.g. gcode), leave those
+;;; functions as identity functions, and use the transformed
+;;; co-ordinates.  Even better, provide both possibilities, using
+;;; cad-use-target-transforms to choose between them.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Transformation matrix functions ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun ident-matrix ()
+  "Return a fresh PostScript identity matrix."
+  (vector 1 0 0 1 0 0))
+
+(defmacro matrix-aref (matrix y x)
+  "Convert a ps-matrix-style reference into a ps-vector-style one."
+  `(aref ,matrix (+ (* ,y 2) ,x)))
+
+(defun mult-matrix (m1 m2)
+  "Matrix multiply M1 by M2."
+  (let ((newm (vector (+ (* (matrix-aref m1 0 0) (matrix-aref m2 0 0))
+			 (* (matrix-aref m1 0 1) (matrix-aref m2 1 0)))
+		      (+ (* (matrix-aref m1 0 0) (matrix-aref m2 0 1))
+			 (* (matrix-aref m1 0 1) (matrix-aref m2 1 1)))
+		      (+ (* (matrix-aref m1 1 0) (matrix-aref m2 0 0))
+			 (* (matrix-aref m1 1 1) (matrix-aref m2 1 0)))
+		      (+ (* (matrix-aref m1 1 0) (matrix-aref m2 0 1))
+			 (* (matrix-aref m1 1 1) (matrix-aref m2 1 1)))
+		      (+ (* (matrix-aref m1 2 0) (matrix-aref m2 0 0))
+			 (* (matrix-aref m1 2 1) (matrix-aref m2 1 0)))
+		      (+ (* (matrix-aref m1 2 0) (matrix-aref m2 0 1))
+			 (* (matrix-aref m1 2 1) (matrix-aref m2 1 1)))
+		      )))
+    (aset newm 4 (+ (aref newm 4) (matrix-aref m2 2 0)))
+    (aset newm 5 (+ (aref newm 5) (matrix-aref m2 2 1)))
+    newm))
+
+(defun translate-matrix (m x y)
+  "To matrix M add a translation of X Y."
+  (mult-matrix (vector 1 0 0 1 x y) m))
+
+(defun scale-matrix (m x y)
+  "To matrix M add a scaling of X Y."
+  (mult-matrix (vector x 0 0 y 0 0) m))
+
+(defun rotate-matrix (m a)
+  "To matrix M add a rotation of A."
+  (let ((thecos (cos (degrees-to-radians a)))
+	(thesin (sin (degrees-to-radians a))))
+    (mult-matrix (vector thecos thesin (- thesin) thecos 0 0) m)))
+
+(defmacro xmtransform (x y m)
+  "The X part of the result of transforming X Y by the matrix M."
+  `(+ (* ,x (aref ,m 0))
+      (* ,y (aref ,m 2))
+      (aref ,m 4)))
+
+(defmacro ymtransform (x y m)
+  "The Y part of the result of transforming X Y by the matrix M."
+  `(+ (* ,x (aref ,m 1))
+      (* ,y (aref ,m 3))
+      (aref ,m 5)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables that get rebound ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; We keep the current transformation matrix, PostScript-style, but
-;;; in a collection of separate variables.  Depending on your output
-;;; language, you may either want to use the user-supplied
-;;; co-ordinates directly, or transformed.  If your output language
-;;; has suitable operations (e.g. PostScript), you'll be using them
-;;; directly, your output methods will need to output the
-;;; transformation actions, using modal functions such as begin-rotate
-;;; and end-rotate.  If your output language doesn't support such
-;;; transformation operations (e.g. gcode), leave those functions as
-;;; identity functions, and use the transformed co-ordinates.  Even
-;;; better, provide both possibilities, using
-;;; cad-use-target-transforms to choose between them.
-
-(defvar xc nil
-  "The x part of the cursor.")
-
-(defvar yc nil
-  "The y part of the cursor.")
-
-(defvar xx 1.0
-  "The x (in) contribution to the x (out).")
-
-(defvar yx 0.0
-  "The y (in) contribution to the x (out).")
-
-(defvar yy 1.0
-  "The y (in) contribution to the y (out).")
-
-(defvar xy 0.0
-  "The x (in) contribution to the y (out).")
-
-(defvar xo 0.0
-  "The x offset.")
-
-(defvar yo 0.0
-  "The y offset.")
+(defvar ctm (ident-matrix))
 
 (defvar action 'cutpath
   "The action to apply to the current path.
@@ -116,18 +150,19 @@ They can override this by defining their own action.")
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmodel cad-preamble (width height)
-  "Functions to run at the start of rendering a drawing of HEIGHT and WIDTH.")
+  "Function to run at the start of rendering a drawing of HEIGHT and WIDTH.
+Must return a suitable transformation matrix for the output device.")
 
 (defmodel cad-postamble ()
-  "Functions to run at the end of rendering a drawing.")
+  "Function to run at the end of rendering a drawing.")
 
 (defun tx (rx ry)
   "Return the X part of the transformed form of RX RY."
-  (+ (* rx xx) (* ry yx) xo))
+  (xmtransform rx ry ctm))
 
 (defun ty (rx ry)
   "Return the Y part of the transformed form of RX RY."
-  (+ (* rx xy) (* ry yy) yo))
+  (ymtransform rx ry ctm))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Drawing structure ;;
@@ -141,10 +176,10 @@ The drawing is held on the 'cad-drawing property of each symbol.")
   "Define a drawing called NAME using ACTION of WIDTH and HEIGHT, made of PARTS."
   `(progn
      (put ',name 'cad-drawing
-	  '(let ((default-action ',action)
+	  '(let* ((default-action ',action)
 		 (cad-canvas-width ,width)
-		 (cad-canvas-height ,height))
-	     (cad-preamble ,width ,height)
+		 (cad-canvas-height ,height)
+		 (ctm (cad-preamble ,width ,height)))
 	     ,@parts
 	     (cad-postamble)))
      (add-to-list 'cad-drawings '(,name))))
@@ -168,31 +203,21 @@ If the first argument is a symbol, it is used as the drawing action."
 
 (defmacro rotate (angle &rest parts)
   "Rotated by ANGLE, draw PARTS."
-  `(let* ((rad (degrees-to-radians ,angle))
-	 (as (sin rad))
-	 (ac (cos rad)))
-    (let ((xx (+ (* xx ac) (* yx as)))
-	  (xy (+ (* xy ac) (* yy as)))
-	  (yx (+ (* yx ac) (* xx as)))
-	  (yy (+ (* yy ac) (* xy as))))
-      (begin-rotate rad ,angle)
-      ,@parts
-      (end-rotate))))
+  `(let ((ctm (rotate-matrix ctm angle)))
+     (begin-rotate rad ,angle)
+     ,@parts
+     (end-rotate)))
 
 (defmacro translate (xd yd &rest parts)
   "Translated by XD YD, draw PARTS."
-  `(let ((xo (+ xo xd))
-	 (yo (+ yo yd)))
+  `(let ((ctm (translate-matrix ctm xd yd)))
      (begin-translate xd yd)
      ,@parts
      (end-translate)))
 
 (defmacro scale (xs ys &rest parts)
   "Scaled by XS YS, draw PARTS."
-  `(let ((xx (* xx xs))
-	 (xy (* xy ys))
-	 (yy (* yy ys))
-	 (yx (* yx xs)))
+  `(let ((ctm (scale-matrix m xs ys)))
      (begin-scale xs ys)
      ,@parts
      (end-scale)))

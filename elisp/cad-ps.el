@@ -25,7 +25,8 @@
 ;;; Code:
 
 (defmodal cad-preamble ps-mode (width height)
-  (insert "%!PS\n"))
+  (insert "%!PS\n")
+  (ident-matrix))
 
 (defmodal cad-postamble ps-mode ()
   (insert "showpage\n"))

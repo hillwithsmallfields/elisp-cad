@@ -25,7 +25,8 @@
 ;;; Code:
 
 (defmodal cad-preamble dxf-mode (width height)
-  (error "Drawing to dxf not yet implemented"))
+  (error "Drawing to dxf not yet implemented")
+  (ident-matrix))
 
 (defmodal cad-postamble dxf-mode ())
 
