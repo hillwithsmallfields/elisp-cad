@@ -20,7 +20,8 @@
 
 ;;; Commentary:
 
-;; 
+;; cad-use-target-transforms is implemented only partially in this
+;; output mode.
 
 ;;; Code:
 
@@ -32,7 +33,9 @@
 	  (format "<svg width=\"%d\" height=\"%d\">\n"
 		  width height))
   (setq cad-svg-prefix "  ")
-  (translate-matrix (scale-matrix (ident-matrix) 1.0 -1.0) 0.0 (* -1.0 height)))
+  (translate-matrix (scale-matrix (ident-matrix)
+				  1.0 -1.0)
+		    0.0 (* -1.0 height)))
 
 (defmodal cad-postamble nxml-mode ()
   (insert "</svg>\n"))
@@ -57,6 +60,7 @@
 	  (format (if cad-use-target-transforms
 		      "<g transform=\"translate(%f,%f)\">\n"
 		    "<!-- translate %f,%f -->\n")
+		  ;; todo: scale these
 		  xd yd))
     (setq cad-svg-prefix (concat "  " cad-svg-prefix)))
 
@@ -168,6 +172,7 @@
 	 (y2 (+ cy (* r (sin th2))))
 	 (clockwise (> a1 a2))
 	 )
+    ;; todo: lots of fiddling on this, need to get whether it's a major or minor arc, etc
     (insert cad-svg-prefix
 	    (format "<path d=\"M %f %f A %f %f 0 0 0 %f %f\" %s/>%s\n"
 		    x1 y1
