@@ -49,7 +49,9 @@
 (defmodal end-scale ps-mode ()
   (insert "grestore\n"))
 
-(defmodal begin-colour ps-mode (colour))
+(defmodal begin-colour ps-mode (colour)
+  ;; todo: convert the colour to PS format
+  )
 
 (defmodal end-colour ps-mode ())
 
