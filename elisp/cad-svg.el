@@ -114,15 +114,13 @@
 
 (defmodal lineto nxml-mode (x y))
 
-(defmodal arc nxml-mode (xc yc r ang1 ang2))
-
 (defun svg-fill-stroke ()
   "Return the style string for an svg shape."
   (if (eq action 'fillpath)
       (format "fill=\"%s\"" cad-colour)
     (format "stroke=\"%s\" fill=\"none\"" cad-colour)))
 
-(defmodal circle nxml-mode (r &optional label)
+(defmodal cad-circle nxml-mode (r &optional label)
   (insert cad-svg-prefix
 	  (if cad-use-target-transforms
 	      (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" %s/>%s\n"
@@ -140,7 +138,7 @@
 			(concat " <!--" label "-->")
 		      "")))))
 
-(defmodal rectangle nxml-mode (w h &optional label)
+(defmodal cad-rectangle nxml-mode (w h &optional label)
   (insert cad-svg-prefix
 	  (if cad-use-target-transforms
 	      (format "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" %s/>%s\n"
@@ -163,7 +161,7 @@
 			""))))))
 
 
-(defmodal arc nxml-mode (cx cy r a1 a2 &optional label)
+(defmodal cad-darc nxml-mode (cx cy r a1 a2 &optional label)
   (let* ((th1 (degrees-to-radians a1))
 	 (th2 (degrees-to-radians a2))
 	 (x1 (+ cx (* r (cos th1))))

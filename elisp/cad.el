@@ -322,15 +322,11 @@ For use within the `shape' macro.")
   "Draw a line from the current point to X Y.
 For use within the `shape' macro.")
 
-(defmodel arc (xc yc r ang1 ang2)
-  "Draw an arc.
-For use within the `shape' macro.")
-
-(defmodel circle (r &optional label)
+(defmodel cad-circle (r &optional label)
   "Draw a circle at the current point, of radius R.
 An optional LABEL may be given.")
 
-(defmodel rectangle (w h &optional label)
+(defmodel cad-rectangle (w h &optional label)
   "Draw a rectangle at the current point, of W and H.
 An optional LABEL may be given.
 The bottom left corner is at the current point.")

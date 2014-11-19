@@ -58,13 +58,11 @@
 
 (defmodal lineto dxf-mode (x y))
 
-(defmodal arc dxf-mode (xc yc r ang1 ang2))
+(defmodal cad-circle dxf-mode (r))
 
-(defmodal circle dxf-mode (r))
+(defmodal cad-rectangle dxf-mode (w h))
 
-(defmodal rectangle dxf-mode (w h))
-
-(defmodal arc dxf-mode (cx cy r a1 a2 &optional label))
+(defmodal cad-arc dxf-mode (cx cy r a1 a2 &optional label))
 
 (provide 'cad-dxf)
 

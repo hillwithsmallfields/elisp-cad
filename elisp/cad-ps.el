@@ -67,13 +67,11 @@
 
 (defmodal lineto ps-mode (x y))
 
-(defmodal arc ps-mode (xc yc r ang1 ang2))
+(defmodal cad-circle ps-mode (r))
 
-(defmodal circle ps-mode (r))
+(defmodal cad-rectangle ps-mode (w h))
 
-(defmodal rectangle ps-mode (w h))
-
-(defmodal arc ps-mode (cx cy r a1 a2 &optional label))
+(defmodal cad-arc ps-mode (cx cy r a1 a2 &optional label))
 
 (provide 'cad-ps)
 

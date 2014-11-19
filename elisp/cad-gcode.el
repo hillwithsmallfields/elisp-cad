@@ -59,13 +59,11 @@
 
 (defmodal lineto gcode-mode (x y))
 
-(defmodal arc gcode-mode (xc yc r ang1 ang2))
+(defmodal cad-circle gcode-mode (r))
 
-(defmodal circle gcode-mode (r))
+(defmodal cad-rectangle gcode-mode (w h))
 
-(defmodal rectangle gcode-mode (w h))
-
-(defmodal arc gcode-mode (cx cy r a1 a2 &optional label))
+(defmodal cad-arc gcode-mode (cx cy r a1 a2 &optional label))
 
 (provide 'cad-gcode)
 
