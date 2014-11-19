@@ -164,8 +164,8 @@ Must return a suitable transformation matrix for the output device.")
   "Return the Y part of the transformed form of RX RY."
   (ymtransform rx ry ctm))
 
-(defun cad-get-parameter (name proplist op a b &optional otherop c d)
-  "Get the parameter called NAME from PROPLIST, or deduce it.
+(defun cad-get-parameter (proplist name op a b &optional otherop c d)
+  "From PROPLIST get the parameter called NAME, or deduce it.
 Deducing it means applying OP to parameters named A and B."
   (or (plist-get proplist name)
       (let ((pa (plist-get proplist a))
@@ -344,7 +344,7 @@ An optional LABEL may be given.")
 
 (defmacro circle (&rest parameters)
   "Keyworded macro for circle drawing using PARAMETERS."
-  (let* ((centre-x (cad-get-parameter 'centre-x '(lambda (a b ))))))) ; todo: finish this, using two possible deduction types
+  (let* ((centre-x (cad-get-parameter parameters 'centre-x '(lambda (a b ))))))) ; todo: finish this, using two possible deduction types
 
 (defmodel cad-rectangle (w h &optional label)
   "Draw a rectangle at the current point, of W and H.
@@ -353,10 +353,10 @@ The bottom left corner is at the current point.")
 
 (defmacro rectangle (&rest parameters)
   "Keyworded macro for rectangle drawing using PARAMETERS."
-  (let* ((bottom (cad-get-parameter 'bottom '- 'top 'height))
-	 (height (cad-get-parameter 'height '- 'top 'bottom))
-	 (left (cad-get-parameter 'left '- 'right 'width))
-	 (width (cad-get-parameter 'width '- 'right 'left)))
+  (let* ((bottom (cad-get-parameter parameters 'bottom '- 'top 'height))
+	 (height (cad-get-parameter parameters 'height '- 'top 'bottom))
+	 (left (cad-get-parameter parameters 'left '- 'right 'width))
+	 (width (cad-get-parameter parameters 'width '- 'right 'left)))
     `(progn
        (moveto ,left ,bottom)
        (cad-rectangle ,width ,height) )))
