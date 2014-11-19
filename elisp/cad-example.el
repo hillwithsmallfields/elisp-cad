@@ -29,24 +29,27 @@
 (drawing just-a-circle cutpath 400 400
 	 (shape
 	  (moveto 200 200)
-	  (circle 100)))
+	  (cad-circle 100)))
 
 (drawing just-a-rectangle cutpath 400 400
 	 (shape
 	  (moveto 200 200)
-	  (rectangle 150 100)))
+	  (cad-rectangle 150 100)))
+
+(drawing fancy-rectangle cutpath 400 400
+	 (rectangle width 200 height 200 left 100 top 300))
 
 (drawing tilted-rectangle cutpath 400 400
 	 (shape
-	  (rotate 15
+	  (cad-rotate 15
 		  (moveto 200 200)
-		  (rectangle 150 100 "tilted"))))
+		  (cad-rectangle 150 100 "tilted"))))
 
 (drawing arc-fragment cutpath 400 400
 	 (shape
 	  (moveto 200 200)
-	  (circle 50)
-	  (arc 200 200 100 0 75)))
+	  (cad-circle 50)
+	  (cad-arc 200 200 100 0 75)))
 
 (provide 'cad-example)
 ;;; cad-example.el ends here
