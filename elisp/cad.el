@@ -24,9 +24,9 @@
 
 ;;; Code:
 
-(require 'modal-functions)
-
 (add-to-list 'load-path (file-name-directory load-file-name))
+
+(require 'modal-functions)
 
 (autoload 'gcode-mode "gcode") ; git clone https://github.com/jasapp/gcode-emacs.git
 (add-to-list 'auto-mode-alist (cons ".tap" 'gcode-mode))
@@ -207,11 +207,12 @@ If the first argument is a symbol, it is used as the drawing action."
       `(let ((action ',(car parts)))
 	 (newpath)
 	 ,@(cdr parts)
-	 (,(car parts)))
+	 (,(car parts))
+	 (funcall action))
     `(let ((action default-action))
        (newpath)
        ,@parts
-       (funcall default-action))))
+       (funcall action))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Forms to use in drawings ;;
@@ -219,7 +220,8 @@ If the first argument is a symbol, it is used as the drawing action."
 
 (defmacro rotate (angle &rest parts)
   "Rotated by ANGLE, draw PARTS."
-  `(let ((ctm (rotate-matrix ctm angle)))
+  `(let ((rad (degrees-to-radians ,angle))
+	 (ctm (rotate-matrix ctm ,angle)))
      (begin-rotate rad ,angle)
      ,@parts
      (end-rotate)))
@@ -313,8 +315,6 @@ All of PARTS are drawn at each position."
 ;;; other output modes.  defmodel makes a despatcher function, which
 ;;; is implemented by a mode-specific definition.
 
-;; todo: line, arc, box, etc
-
 (defmodel newpath ()
   "Begin a new path.")
 
@@ -361,7 +361,7 @@ The bottom left corner is at the current point.")
        (moveto ,left ,bottom)
        (cad-rectangle ,width ,height) )))
 
-(defmodel arc (cx cy r a1 a2 &optional label)
+(defmodel cad-arc (cx cy r a1 a2 &optional label)
   "Draw an arc centred at CX CY of radius R between angles A1 and A2.")
 
 ;;;;;;;;;;;;;;;
