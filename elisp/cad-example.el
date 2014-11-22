@@ -41,7 +41,7 @@
 
 (drawing tilted-rectangle cutpath 400 400
 	 (shape
-	  (cad-rotate 15
+	  (rotate 15
 		  (moveto 200 200)
 		  (cad-rectangle 150 100 "tilted"))))
 
@@ -50,6 +50,12 @@
 	  (moveto 200 200)
 	  (cad-circle 50)
 	  (cad-arc 200 200 100 0 75)))
+
+(drawing many-arcs cutpath 1400 1400
+	 (dotimes (i 12)
+	   (dotimes (j 12)
+	     (shape
+	      (cad-arc (* j 50) (* i 50) 12 (* j 30) (* i 30))))))
 
 (provide 'cad-example)
 ;;; cad-example.el ends here
