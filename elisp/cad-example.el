@@ -50,13 +50,22 @@
 (drawing arc-fragment cutpath 400 400
 	 (shape (moveto 200 200)
 		(cad-circle 50)
-		(cad-arc 200 200 100 0 75)))
+		(cad-arc 200 200 100 0 60)))
 
 (drawing many-arcs cutpath 1400 1400
 	 (shape (rectangle bottom 10 left 10 width 200 height 20))
 	 (dotimes (i 12)
 	   (dotimes (j 12)
 	     (shape (cad-arc (* j 50) (* i 50) 12 (* j 30) (* i 30))))))
+
+(drawing rounded-rectangle-by-parts cutpath 400 600
+	 (shape
+	  (cad-arc 100 300 25 180 90)
+	  ;; (cad-arc 500 300 25 90 0)
+	  ;; (cad-arc 500 100 25 0 -90)
+	  ;; (cad-arc 100 100 25 -90 -180)
+	  )
+	 )
 
 (provide 'cad-example)
 ;;; cad-example.el ends here

@@ -183,7 +183,7 @@
 	    (if major "major" "minor")
 	    " -->\n"
 	    cad-svg-prefix
-	    (format "<path d=\"M %f %f A %f %f 0 0 0 %f %f\" %s/>%s\n"
+	    (format "<path d=\"M %f %f A %f %f 0 0 1 %f %f\" %s/>%s\n"
 		    x1 y1
 		    r r
 		    x2 y2
