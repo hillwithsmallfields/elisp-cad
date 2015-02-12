@@ -25,8 +25,5 @@
 
 ;;; Code:
 
-(defun rounded-rectangle (width height radius)
-  "Draw a rounded rectangle of WIDTH HEIGHT, with rounding of RADIUS.")
-
 (provide 'cad-shape-library)
 ;;; cad-shape-library.el ends here
