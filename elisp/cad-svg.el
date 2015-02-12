@@ -142,28 +142,52 @@
 			(concat " <!--" label "-->")
 		      "")))))
 
-(defmodal cad-rectangle nxml-mode (w h &optional label)
+(defmodal cad-rectangle nxml-mode (left bottom width height &optional label)
   (insert cad-svg-prefix
 	  (if cad-use-target-transforms
 	      (format "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" %s/>%s\n"
-		      xc yc
-		      w h
+		      left bottom
+		      width height
 		      (svg-fill-stroke)
 		      (if label
 			  (concat " <!--" label "-->")
 			""))
-	    (let ((x2 (+ xc w))
-		  (y2 (+ yc h)))
+	    (let ((x2 (+ left w))
+		  (y2 (+ bottom h)))
 	      (format "<polygon points=\"%f %f, %f %f, %f %f, %f %f\" %s/>%s\n"
-		      (tx xc yc) (ty xc yc)
-		      (tx xc y2) (ty xc y2)
+		      (tx left bottom) (ty left bottom)
+		      (tx left y2) (ty left y2)
 		      (tx x2 y2) (ty x2 y2)
-		      (tx x2 yc) (ty x2 yc)
+		      (tx x2 bottom) (ty x2 bottom)
 		      (svg-fill-stroke)
 		      (if label
 			  (concat " <!--" label "-->")
 			""))))))
 
+(defmodal cad-rounded-rectangle nxml-mode (left bottom width height radius &optional label)
+  (insert cad-svg-prefix
+	  (if cad-use-target-transforms
+	      (let* ((left2 (+ left radius))
+		     (bottom2 (+ bottom radius))
+		     (right (+ left width))
+		     (top (+ bottom height))
+		     (right2 (- right radius))
+		     (top2 (- top radius)))
+		(format "<path d=\"M %d %d L %d %d A %d %d 0 0 1 %d %d L %d %d A %d %d 0 0 1 %d %d L %d %d A %d %d 0 0 1 %d %d L %d %d A %d %d 0 0 1 %d %d\" %s/>%s\n"
+			left bottom2
+			left top2
+			radius radius left2 top
+			right2 top
+			radius radius right top2
+			right bottom2
+			radius radius right2 bottom
+			left2 bottom
+			radius radius left bottom2
+			(svg-fill-stroke)
+			(if label
+			    (concat " <!--" label "-->")
+			  "")))
+	    (format "Not yet implemented"))))
 
 (defmodal cad-arc nxml-mode (cx cy r a1 a2 &optional label)
   (let* ((th1 (degrees-to-radians a1))

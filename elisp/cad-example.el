@@ -58,14 +58,9 @@
 	   (dotimes (j 12)
 	     (shape (cad-arc (* j 50) (* i 50) 12 (* j 30) (* i 30))))))
 
-(drawing rounded-rectangle-by-parts cutpath 400 600
+(drawing rounded-rectangle-test cutpath 600 600
 	 (shape
-	  (cad-arc 100 300 25 180 90)
-	  ;; (cad-arc 500 300 25 90 0)
-	  ;; (cad-arc 500 100 25 0 -90)
-	  ;; (cad-arc 100 100 25 -90 -180)
-	  )
-	 )
+	  (rounded-rectangle bottom 100 left 100 top 300 right 400 radius 25)))
 
 (provide 'cad-example)
 ;;; cad-example.el ends here

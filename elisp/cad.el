@@ -164,7 +164,11 @@ Must return a suitable transformation matrix for the output device.")
   "Return the Y part of the transformed form of RX RY."
   (ymtransform rx ry ctm))
 
-(defun cad-get-parameter (proplist name op a b &optional otherop c d)
+(defun cad-get-parameter (proplist name)
+  "From PROPLIST get the parameter called NAME."
+  (plist-get proplist name))
+
+(defun cad-parameter (proplist name op a b &optional otherop c d)
   "From PROPLIST get the parameter called NAME, or deduce it.
 Deducing it means applying OP to parameters named A and B."
   (or (plist-get proplist name)
@@ -344,22 +348,32 @@ An optional LABEL may be given.")
 
 (defmacro circle (&rest parameters)
   "Keyworded macro for circle drawing using PARAMETERS."
-  (let* ((centre-x (cad-get-parameter parameters 'centre-x '(lambda (a b ))))))) ; todo: finish this, using two possible deduction types
+  (let* ((centre-x (cad-parameter parameters 'centre-x '(lambda (a b ))))))) ; todo: finish this, using two possible deduction types
 
-(defmodel cad-rectangle (w h &optional label)
-  "Draw a rectangle at the current point, of W and H.
-An optional LABEL may be given.
-The bottom left corner is at the current point.")
+(defmodel cad-rectangle (left bottom width height &optional label)
+  "Draw a rectangle at LEFT BOTTOM, of WIDTH and HEIGHT.
+An optional LABEL may be given.")
 
 (defmacro rectangle (&rest parameters)
   "Keyworded macro for rectangle drawing using PARAMETERS."
-  (let* ((bottom (cad-get-parameter parameters 'bottom '- 'top 'height))
-	 (height (cad-get-parameter parameters 'height '- 'top 'bottom))
-	 (left (cad-get-parameter parameters 'left '- 'right 'width))
-	 (width (cad-get-parameter parameters 'width '- 'right 'left)))
-    `(progn
-       (moveto ,left ,bottom)
-       (cad-rectangle ,width ,height) )))
+  (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
+	 (height (cad-parameter parameters 'height '- 'top 'bottom))
+	 (left (cad-parameter parameters 'left '- 'right 'width))
+	 (width (cad-parameter parameters 'width '- 'right 'left)))
+    `(cad-rectangle ,left ,bottom ,width ,height)))
+
+(defmodel cad-rounded-rectangle (left bottom width height radius &optional label)
+  "Draw a rounded rectangle at LEFT BOTTOM, of WIDTH and HEIGHT and corner RADIUS.
+An optional LABEL may be given.")
+
+(defmacro rounded-rectangle (&rest parameters)
+  "Keyworded macro for rounded rectangle drawing using PARAMETERS."
+  (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
+	 (height (cad-parameter parameters 'height '- 'top 'bottom))
+	 (left (cad-parameter parameters 'left '- 'right 'width))
+	 (width (cad-parameter parameters 'width '- 'right 'left))
+	 (radius (cad-get-parameter parameters 'radius)))
+    `(cad-rounded-rectangle ,left ,bottom ,width ,height ,radius)))
 
 (defmodel cad-arc (cx cy r a1 a2 &optional label)
   "Draw an arc centred at CX CY of radius R between angles A1 and A2.")

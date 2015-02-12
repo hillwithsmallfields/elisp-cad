@@ -61,7 +61,9 @@
 
 (defmodal cad-circle gcode-mode (r))
 
-(defmodal cad-rectangle gcode-mode (w h))
+(defmodal cad-rectangle gcode-mode (l b w h &optional label))
+
+(defmodal cad-rounded-rectangle gcode-mode (l b w h r &optional label))
 
 (defmodal cad-arc gcode-mode (cx cy r a1 a2 &optional label))
 

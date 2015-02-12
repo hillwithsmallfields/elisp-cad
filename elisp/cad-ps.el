@@ -69,7 +69,9 @@
 
 (defmodal cad-circle ps-mode (r))
 
-(defmodal cad-rectangle ps-mode (w h))
+(defmodal cad-rectangle ps-mode (l b w h &optional label))
+
+(defmodal cad-rounded-rectangle ps-mode (l b w h r &optional label))
 
 (defmodal cad-arc ps-mode (cx cy r a1 a2 &optional label))
 

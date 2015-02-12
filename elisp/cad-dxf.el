@@ -60,7 +60,9 @@
 
 (defmodal cad-circle dxf-mode (r))
 
-(defmodal cad-rectangle dxf-mode (w h))
+(defmodal cad-rectangle dxf-mode (l b w h))
+
+(defmodal cad-rounded-rectangle dxf-mode (l b w h r))
 
 (defmodal cad-arc dxf-mode (cx cy r a1 a2 &optional label))
 
