@@ -55,7 +55,8 @@
 
 (defmodal end-colour ps-mode ())
 
-(defmodal newpath ps-mode ())
+(defmodal newpath ps-mode ()
+  (insert "newpath\n"))
 
 (defmodal cutpath ps-mode ())
 
@@ -63,15 +64,31 @@
 
 (defmodal fillpath ps-mode ())
 
-(defmodal moveto ps-mode (x y))
+(defmodal moveto ps-mode (x y)
+  (insert (format "%f %f moveto\n" x y)))
 
-(defmodal lineto ps-mode (x y))
+(defmodal lineto ps-mode (x y)
+    (insert (format "%f %f lineto\n" x y)))
 
 (defmodal cad-circle ps-mode (r))
 
-(defmodal cad-rectangle ps-mode (l b w h &optional label))
+(defmodal cad-rectangle ps-mode (left bottom width height &optional label)
+  (let ((top (+ bottom height))
+	(right (+ left width)))
+    (insert
+     (format "%f %f moveto %f %f lineto %f %f lineto %f %f lineto closepath\n"
+	     left bottom left top right top right bottom)))))
 
-(defmodal cad-rounded-rectangle ps-mode (l b w h r &optional label))
+(defmodal cad-rounded-rectangle ps-mode (left bottom width height radius &optional label)
+  (let* ((top (+ bottom height))
+	 (right (+ left width))
+	 (left2 (+ left radius))
+	 (bottom2 (+ bottom radius))
+	 (right2 (- right radius))
+	 (top2 (- top radius)))
+    (insert
+     (format "")
+     )))
 
 (defmodal cad-arc ps-mode (cx cy r a1 a2 &optional label))
 
