@@ -62,5 +62,41 @@
 	 (shape
 	  (rounded-rectangle bottom 100 left 100 top 300 right 400 radius 25)))
 
+(drawing phablet-surround cutpath 500 500
+	 (let* ((frame-width 230)
+		(frame-height 130)
+		(tablet-width 188)
+		(tablet-height 109)
+		(screen-width 156)
+		(screen-height 88)
+		(frame-side (/ (- frame-width tablet-width) 2))
+		(frame-bottom (/ (- frame-height tablet-height) 2))
+		(bezel-side (/ (- frame-width screen-width) 2))
+		(bezel-bottom (/ (- frame-height screen-height) 2)))
+	   (translate 10 10
+		      (shape
+		       (rounded-rectangle left 0
+					  bottom 0
+					  width frame-width
+					  height frame-height
+					  radius 10)
+		       (rounded-rectangle left frame-side
+					  bottom frame-bottom
+					  width tablet-width
+					  height tablet-height
+					  radius 10)))
+	   (translate 10 200
+		      (shape
+		       (rounded-rectangle left 0
+					  bottom 0
+					  width frame-width
+					  height frame-height
+					  radius 10)
+		       (rounded-rectangle left bezel-side
+					  bottom bezel-bottom
+					  width screen-width
+					  height screen-height
+					  radius 10)))))
+
 (provide 'cad-example)
 ;;; cad-example.el ends here
