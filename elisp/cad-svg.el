@@ -172,17 +172,18 @@
 		     (right (+ left width))
 		     (top (+ bottom height))
 		     (right2 (- right radius))
-		     (top2 (- top radius)))
-		(format "<path d=\"M %d %d L %d %d A %d %d 0 0 1 %d %d L %d %d A %d %d 0 0 1 %d %d L %d %d A %d %d 0 0 1 %d %d L %d %d A %d %d 0 0 1 %d %d\" %s/>%s\n"
+		     (top2 (- top radius))
+		     (direction 0))
+		(format "<path d=\"M %f %f L %f %f A %f %f 0 0 %f %f %d L %f %f A %f %f 0 0 %f %f %d L %f %f A %f %f 0 0 %f %f %d L %f %f A %f %f 0 0 %f %f %d\" %s/>%s\n"
 			left bottom2
 			left top2
-			radius radius left2 top
+			radius radius direction left2 top
 			right2 top
-			radius radius right top2
+			radius radius direction right top2
 			right bottom2
-			radius radius right2 bottom
+			radius radius direction right2 bottom
 			left2 bottom
-			radius radius left bottom2
+			radius radius direction left bottom2
 			(svg-fill-stroke)
 			(if label
 			    (concat " <!--" label "-->")
