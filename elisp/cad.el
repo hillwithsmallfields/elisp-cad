@@ -150,6 +150,7 @@ They can override this by defining their own action.")
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmodel cad-preamble (width height)
+  ;; todo: setting of units / scale
   "Function to run at the start of rendering a drawing of HEIGHT and WIDTH.
 Must return a suitable transformation matrix for the output device.")
 
@@ -232,15 +233,15 @@ If the first argument is a symbol, it is used as the drawing action."
 
 (defmacro translate (xd yd &rest parts)
   "Translated by XD YD, draw PARTS."
-  `(let ((ctm (translate-matrix ctm xd yd)))
-     (begin-translate xd yd)
+  `(let ((ctm (translate-matrix ctm ,xd ,yd)))
+     (begin-translate ,xd ,yd)
      ,@parts
      (end-translate)))
 
 (defmacro scale (xs ys &rest parts)
   "Scaled by XS YS, draw PARTS."
-  `(let ((ctm (scale-matrix m xs ys)))
-     (begin-scale xs ys)
+  `(let ((ctm (scale-matrix m ,xs ,ys)))
+     (begin-scale ,xs ,ys)
      ,@parts
      (end-scale)))
 
