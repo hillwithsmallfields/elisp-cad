@@ -185,6 +185,19 @@ Deducing it means applying OP to parameters named A and B."
 		  (error "At least two of %s, %s and %s must be given" name c d))) ; todo: reword this to match the real logic
 	    (error "At least two of %s, %s and %s must be given" name a b))))))
 
+(defun cad-set-properties (name &rest props)
+  "Indicate that NAME has PROPERTIES."
+  (put name 'elisp-cad-props props))
+
+(defun cad-set-property (name key value)
+  "Indicate that for NAME, KEY has VALUE."
+  (put name 'elisp-cad-props
+       (plist-put (plist-get name 'elisp-cad-props)
+		  key value)))
+
+(defun cad-property (name property)
+  (plist-get (get name 'elisp-cad-props) property))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Drawing structure ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -349,6 +362,7 @@ An optional LABEL may be given.")
 
 (defmacro circle (&rest parameters)
   "Keyworded macro for circle drawing using PARAMETERS."
+  ;; todo: allow name parameter
   (let* ((centre-x (cad-parameter parameters 'centre-x '(lambda (a b ))))))) ; todo: finish this, using two possible deduction types
 
 (defmodel cad-rectangle (left bottom width height &optional label)
@@ -357,6 +371,7 @@ An optional LABEL may be given.")
 
 (defmacro rectangle (&rest parameters)
   "Keyworded macro for rectangle drawing using PARAMETERS."
+  ;; todo: allow name parameter
   (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
 	 (height (cad-parameter parameters 'height '- 'top 'bottom))
 	 (left (cad-parameter parameters 'left '- 'right 'width))
@@ -369,6 +384,7 @@ An optional LABEL may be given.")
 
 (defmacro rounded-rectangle (&rest parameters)
   "Keyworded macro for rounded rectangle drawing using PARAMETERS."
+  ;; todo: allow name parameter
   (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
 	 (height (cad-parameter parameters 'height '- 'top 'bottom))
 	 (left (cad-parameter parameters 'left '- 'right 'width))
