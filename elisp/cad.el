@@ -20,7 +20,9 @@
 
 ;;; Commentary:
 
-;; 
+;; todo: fill in top-of etc and add height-of and width-of --- must think about handling coordinate system changes, probably have to keep them in absolute coordinates
+;; todo: allow coordinate pairs/triplets
+;; todo: add top-left-corner-of etc
 
 ;;; Code:
 
@@ -185,6 +187,10 @@ Deducing it means applying OP to parameters named A and B."
 		  (error "At least two of %s, %s and %s must be given" name c d))) ; todo: reword this to match the real logic
 	    (error "At least two of %s, %s and %s must be given" name a b))))))
 
+;;;;;;;;;;;;;;;;;;;;;
+;; Naming elements ;;
+;;;;;;;;;;;;;;;;;;;;;
+
 (defun cad-set-properties (name &rest props)
   "Indicate that NAME has PROPERTIES."
   (put name 'elisp-cad-props props))
@@ -197,6 +203,18 @@ Deducing it means applying OP to parameters named A and B."
 
 (defun cad-property (name property)
   (plist-get (get name 'elisp-cad-props) property))
+
+(defmacro top-of (ELTNAME)
+  "Return the top of the element called ELTNAME")
+
+(defmacro bottom-of (ELTNAME)
+  "Return the bottom of the element called ELTNAME")
+
+(defmacro left-of (ELTNAME)
+  "Return the left of the element called ELTNAME")
+
+(defmacro right-of (ELTNAME)
+  "Return the right of the element called ELTNAME")
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Drawing structure ;;
@@ -363,7 +381,8 @@ An optional LABEL may be given.")
 (defmacro circle (&rest parameters)
   "Keyworded macro for circle drawing using PARAMETERS."
   ;; todo: allow name parameter
-  (let* ((centre-x (cad-parameter parameters 'centre-x '(lambda (a b ))))))) ; todo: finish this, using two possible deduction types
+  (let* ((centre-x (cad-parameter parameters 'centre-x '(lambda (a b ))))
+	 (label (cad-get-parameter parameters 'name))))) ; todo: finish this, using two possible deduction types
 
 (defmodel cad-rectangle (left bottom width height &optional label)
   "Draw a rectangle at LEFT BOTTOM, of WIDTH and HEIGHT.
@@ -375,8 +394,15 @@ An optional LABEL may be given.")
   (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
 	 (height (cad-parameter parameters 'height '- 'top 'bottom))
 	 (left (cad-parameter parameters 'left '- 'right 'width))
-	 (width (cad-parameter parameters 'width '- 'right 'left)))
-    `(cad-rectangle ,left ,bottom ,width ,height)))
+	 (width (cad-parameter parameters 'width '- 'right 'left))
+	 (top (cad-parameter parameters 'top '+ bottom 'height))
+	 (right (cad-parameter parameters 'right '+ left 'width))
+	 (label (cad-get-parameter parameters 'name)))
+    (if label
+	`(progn
+	   (cad-set-edges ,label ,left ,bottom, ,right ,top)
+	   (cad-rectangle ,left ,bottom ,width ,height ,label))
+      `(cad-rectangle ,left ,bottom ,width ,height ,label))))
 
 (defmodel cad-rounded-rectangle (left bottom width height radius &optional label)
   "Draw a rounded rectangle at LEFT BOTTOM, of WIDTH and HEIGHT and corner RADIUS.
@@ -389,8 +415,9 @@ An optional LABEL may be given.")
 	 (height (cad-parameter parameters 'height '- 'top 'bottom))
 	 (left (cad-parameter parameters 'left '- 'right 'width))
 	 (width (cad-parameter parameters 'width '- 'right 'left))
-	 (radius (cad-get-parameter parameters 'radius)))
-    `(cad-rounded-rectangle ,left ,bottom ,width ,height ,radius)))
+	 (radius (cad-get-parameter parameters 'radius))
+	 (label (cad-get-parameter parameters 'name)))
+    `(cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label)))
 
 (defmodel cad-arc (cx cy r a1 a2 &optional label)
   "Draw an arc centred at CX CY of radius R between angles A1 and A2.")
