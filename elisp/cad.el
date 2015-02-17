@@ -396,6 +396,7 @@ An optional LABEL may be given.")
 
 (defmacro rectangle (&rest parameters)
   "Keyworded macro for rectangle drawing using PARAMETERS."
+  ;; todo: allow parameters to be based on a centre position
   (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
 	 (height (cad-parameter parameters 'height '- 'top 'bottom))
 	 (left (cad-parameter parameters 'left '- 'right 'width))
@@ -408,6 +409,7 @@ An optional LABEL may be given.")
 
 (defmacro rounded-rectangle (&rest parameters)
   "Keyworded macro for rounded rectangle drawing using PARAMETERS."
+  ;; todo: allow parameters to be based on a centre position
   (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
 	 (height (cad-parameter parameters 'height '- 'top 'bottom))
 	 (left (cad-parameter parameters 'left '- 'right 'width))
