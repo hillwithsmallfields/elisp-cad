@@ -20,12 +20,12 @@
 
 ;;; Commentary:
 
-;; 
+;; See http://gnipsel.com/linuxcnc/index.html for tutorial
 
 ;;; Code:
 
 (defmodal cad-preamble gcode-mode (width height)
-  (error "Drawing to gcode not yet implemented")
+  (insert (format "; drawing with width=%d and height=%d\n" width height))
   (ident-matrix))
 
 (defmodal cad-postamble gcode-mode ()
@@ -55,9 +55,13 @@
 
 (defmodal fillpath gcode-mode ())
 
-(defmodal moveto gcode-mode (x y))
+(defmodal moveto gcode-mode (x y)
+  ;; todo: vertical move first as needed
+  (insert (format "G0 X%f Y%f Z0\n" x y)))
 
-(defmodal lineto gcode-mode (x y))
+(defmodal lineto gcode-mode (x y)
+  ;; todo: vertical move first as needed
+  (insert (format "G1 X%f Y%f Z0\n" x y)))
 
 (defmodal cad-circle gcode-mode (r))
 
