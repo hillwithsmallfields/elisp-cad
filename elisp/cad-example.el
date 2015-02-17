@@ -62,7 +62,7 @@
 	 (shape
 	  (rounded-rectangle bottom 100 left 100 top 300 right 400 radius 25)))
 
-(drawing phablet-surround cutpath 500 500
+(drawing phablet-surround cutpath 300 300
 	 (let* ((frame-width 230)
 		(frame-height 130)
 		(tablet-width 188)
@@ -74,7 +74,7 @@
 		(bezel-side (/ (- frame-width screen-width) 2))
 		(bezel-bottom (/ (- frame-height screen-height) 2)))
 	   (translate 10 10
-		      (shape
+		      (shape "tablet-frame"
 		       (rounded-rectangle left 0
 					  bottom 0
 					  width frame-width
@@ -84,9 +84,13 @@
 					  bottom frame-bottom
 					  width tablet-width
 					  height tablet-height
-					  radius 10)))
-	   (translate 10 200
-		      (shape
+					  radius 10)
+		       (rectangle left 67 
+				  bottom (+ frame-bottom tablet-height)
+				  width 10 height 10)
+		       ))
+	   (translate 10 150
+		      (shape "tablet-bezel"
 		       (rounded-rectangle left 0
 					  bottom 0
 					  width frame-width
