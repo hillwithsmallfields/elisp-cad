@@ -335,13 +335,32 @@ For use as the 'action' of the `shape' macro.")
   "Fill the current path.
 For use as the 'action' of the `shape' macro.")
 
-(defmodel moveto (x y)
+(defmodel moveto-xy (x y)
   "Move to X Y.
 For use within the `shape' macro.")
 
-(defmodel lineto (x y)
+(defmacro apply-to-parameter-pair (function parameters)
+  "Apply FUNCTION to the first two points from PARAMETERS."
+  (let ((first-param (car parameters)))
+    (if (vectorp first-param)
+	`'(progn
+	   (,function ,(aref first-param 0) ,(aref first-param 1))
+	   ',(cdr parameters))
+      `'(progn
+	 (,function ,first-param ,(cadr parameters))
+	 ',(cddr parameters)))))
+
+(defmacro moveto (&rest parameters)
+  "Keyworded macro for moving to a point using PARAMETERS."
+  `(apply-to-parameter-pair moveto-xy ,parameters))
+
+(defmodel lineto-xy (x y)
   "Draw a line from the current point to X Y.
 For use within the `shape' macro.")
+
+(defmacro lineto (&rest parameters)
+  "Keyworded macro for drawing a line to a point using PARAMETERS."
+  `(apply-to-parameter-pair lineto-xy ,parameters))
 
 (defmodel cad-circle (r &optional label)
   "Draw a circle at the current point, of radius R.
