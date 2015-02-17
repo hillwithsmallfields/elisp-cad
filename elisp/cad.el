@@ -205,18 +205,38 @@ The drawing is held on the 'cad-drawing property of each symbol.")
 	     (cad-postamble)))
      (add-to-list 'cad-drawings '(,name))))
 
+(defun non-string-car (l)
+  "Return the car of L, unless it is a string, in which case return the cadr."
+  (if (stringp (car l))
+      (cadr l)
+    (car l)))
+
+(defun non-string-cdr (l)
+  "Return the cdr of L, unless it is a string, in which case return the cadr."
+  (if (stringp (car l))
+      (cddr l)
+    (cdr l)))
+
+(defun non-string-identity (l)
+  "Return L, unless its car is a string, in which return its cdr."
+  (if (stringp (car l))
+      (cdr l)
+    l))
+
 (defmacro shape (&rest parts)
   "Define a shape made of PARTS and draw it.
-If the first argument is a symbol, it is used as the drawing action."
-  (if (symbolp (car parts))
-      `(let ((action ',(car parts)))
+If the first argument is a symbol, it is used as the drawing action.
+If the first or second argument is a string, it is used to name the shape."
+  ;; todo: implement the naming; so far, I only filter it out
+  (if (symbolp (non-string-car parts))
+      `(let ((action ',(non-string-car parts)))
 	 (newpath)
-	 ,@(cdr parts)
-	 (,(car parts))
+	 ,@(non-string-cdr parts)
+	 (,(non-string-car parts))
 	 (funcall action))
     `(let ((action default-action))
        (newpath)
-       ,@parts
+       ,@(non-string-identity parts)
        (funcall action))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
