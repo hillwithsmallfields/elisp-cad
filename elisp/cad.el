@@ -171,21 +171,40 @@ Must return a suitable transformation matrix for the output device.")
   "From PROPLIST get the parameter called NAME."
   (plist-get proplist name))
 
-(defun cad-parameter (proplist name op a b &optional otherop c d)
+(defun cad-parameter (proplist name &rest other-ways)
   "From PROPLIST get the parameter called NAME, or deduce it.
-Deducing it means applying OP to parameters named A and B."
+OTHER-WAYS is a list of ways of deducing it."
   (or (plist-get proplist name)
-      (let ((pa (plist-get proplist a))
-	    (pb (plist-get proplist b)))
-	(if (and pa pb)
-	    (funcall op pa pb)
-	  (if (and otherop c d)
-	      (let ((pc (plist-get proplist c))
-		    (pd (plist-get proplist d)))
-		(if (and pc pd)
-		    (funcall otherop pc pd)
-		  (error "At least two of %s, %s and %s must be given" name c d))) ; todo: reword this to match the real logic
-	    (error "At least two of %s, %s and %s must be given" name a b))))))
+      (catch 'done
+	(message "Trying to deduce %S from %S" name proplist)
+	(dolist (this-way other-ways)
+	  (let ((other-op (car this-way))
+		(other-a (cadr this-way))
+		(other-b (caddr this-way)))
+	    (message "Trying %S: other-op=%S other-a=%S other-b=%S" this-way other-op other-a other-b)
+	    (let ((a-val (eval (plist-get proplist other-a)))
+		  (b-val (eval (plist-get proplist other-b))))
+	      (message "a-val=%S b-val=%S" a-val b-val)
+	      (when (and a-val b-val)
+		(throw 'done (funcall other-op a-val b-val))))))
+	(error "No suitable combination of parameters was given: need any of %s to be found in %S"
+	       (mapconcat (lambda (descr)
+			    (format "%s and %s" (cadr descr) (caddr descr)))
+			  other-ways ", or ")
+	       proplist))))
+
+(defun -/2 (from difference)
+  "Return the result of starting at FROM and removing half the DIFFERENCE.
+For generating an edge co-ordinate from the centre and width or height."
+  (- from (/ difference 2.0)))
+
+(defun *2- (a b)
+  "Return twice the result of from A subtracting B."
+  (* 2 (- a b)))
+
+(defun mid-point (a b)
+  "Return the mid-point of A and B."
+  (+ a (/ (- b a) 2)))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Naming elements ;;
@@ -420,7 +439,13 @@ An optional LABEL may be given.")
 (defmacro circle (&rest parameters)
   "Keyworded macro for circle drawing using PARAMETERS."
   ;; todo: allow name parameter
-  (let* ((centre-x (cad-parameter parameters 'centre-x '(lambda (a b ))))
+  (let* ((centre-x (cad-parameter parameters 'centre-x
+				  '(mid-point left right)))
+	 (centre-y (cad-parameter parameters 'centre-y
+				  '(mid-point bottom top)))
+	 (radius (cad-parameter parameters 'radius
+				'(-/2 top bottom)
+				'(-/2 right left)))
 	 (label (cad-get-parameter parameters 'name))))) ; todo: finish this, using two possible deduction types
 
 (defmodel cad-rectangle (left bottom width height &optional label)
@@ -430,12 +455,24 @@ An optional LABEL may be given.")
 (defmacro rectangle (&rest parameters)
   "Keyworded macro for rectangle drawing using PARAMETERS."
   ;; todo: allow parameters to be based on a centre position
-  (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
-	 (height (cad-parameter parameters 'height '- 'top 'bottom))
-	 (left (cad-parameter parameters 'left '- 'right 'width))
-	 (width (cad-parameter parameters 'width '- 'right 'left))
-	 (top (cad-parameter parameters 'top '+ bottom 'height))
-	 (right (cad-parameter parameters 'right '+ left 'width))
+  (let* ((bottom (cad-parameter parameters 'bottom
+				'(- top height)
+				'(-/2 y-centre height)))
+	 (height (cad-parameter parameters 'height
+				'(- top bottom)
+				'(*2- y-centre bottom)
+				'(*2- top y-centre)))
+	 (left (cad-parameter parameters 'left
+			      '(- right width)
+			      '(-/2 x-centre width)))
+	 (width (cad-parameter parameters 'width
+			       '(- right left)
+			       '(*2- right x-centre)
+			       '(*2- x-centre left)))
+	 (top (cad-parameter parameters 'top
+			     '(+ bottom height)))
+	 (right (cad-parameter parameters 'right
+			       '(+ left width)))
 	 (label (cad-get-parameter parameters 'name)))
     (if label
 	`(progn
@@ -450,10 +487,20 @@ An optional LABEL may be given.")
 (defmacro rounded-rectangle (&rest parameters)
   "Keyworded macro for rounded rectangle drawing using PARAMETERS."
   ;; todo: allow parameters to be based on a centre position
-  (let* ((bottom (cad-parameter parameters 'bottom '- 'top 'height))
-	 (height (cad-parameter parameters 'height '- 'top 'bottom))
-	 (left (cad-parameter parameters 'left '- 'right 'width))
-	 (width (cad-parameter parameters 'width '- 'right 'left))
+  (let* ((bottom (cad-parameter parameters 'bottom
+				'(- top height)
+				'(-/2 y-centre height)))
+	 (height (cad-parameter parameters 'height
+				'(- top bottom)
+				'(*2- y-centre bottom)
+				'(*2- top y-centre)))
+	 (left (cad-parameter parameters 'left
+			      '(- right width)
+			      '(-/2 x-centre width)))
+	 (width (cad-parameter parameters 'width
+			       '(- right left)
+			       '(*2- right x-centre)
+			       '(*2- x-centre left)))
 	 (radius (cad-get-parameter parameters 'radius))
 	 (label (cad-get-parameter parameters 'name)))
     `(cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label)))
