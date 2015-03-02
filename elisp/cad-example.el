@@ -65,6 +65,8 @@
 (drawing phablet-surround cutpath 300 300
 	 (let* ((frame-width 230)
 		(frame-height 130)
+		(frame-x-centre (/ frame-width 2))
+		(frame-y-centre (/ frame-height 2))
 		(tablet-width 188)
 		(tablet-height 109)
 		(screen-width 156)
@@ -75,32 +77,32 @@
 		(bezel-bottom (/ (- frame-height screen-height) 2)))
 	   (translate 10 10
 		      (shape "tablet-frame"
-		       (rounded-rectangle left 0
-					  bottom 0
-					  width frame-width
-					  height frame-height
-					  radius 10)
-		       (rounded-rectangle left frame-side
-					  bottom frame-bottom
-					  width tablet-width
-					  height tablet-height
-					  radius 10)
-		       (rectangle left 67 
-				  bottom (+ frame-bottom tablet-height)
-				  width 10 height 10)
-		       ))
+			     (rounded-rectangle x-centre frame-x-centre
+						y-centre frame-y-centre
+						width frame-width
+						height frame-height
+						radius 10)
+			     (rounded-rectangle x-centre frame-x-centre
+						y-centre frame-y-centre
+						width tablet-width
+						height tablet-height
+						radius 10)
+			     (rectangle left 67 
+					bottom (+ frame-bottom tablet-height)
+					width 10 height 10)
+			     ))
 	   (translate 10 150
 		      (shape "tablet-bezel"
-		       (rounded-rectangle left 0
-					  bottom 0
-					  width frame-width
-					  height frame-height
-					  radius 10)
-		       (rounded-rectangle left bezel-side
-					  bottom bezel-bottom
-					  width screen-width
-					  height screen-height
-					  radius 10)))))
+			     (rounded-rectangle x-centre frame-x-centre
+						y-centre frame-y-centre
+						width frame-width
+						height frame-height
+						radius 10)
+			     (rounded-rectangle x-centre frame-x-centre
+						y-centre frame-y-centre
+						width screen-width
+						height screen-height
+						radius 10)))))
 
 (provide 'cad-example)
 ;;; cad-example.el ends here
