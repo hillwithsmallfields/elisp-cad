@@ -206,6 +206,58 @@ For generating an edge co-ordinate from the centre and width or height."
   "Return the mid-point of A and B."
   (+ a (/ (- b a) 2)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Co-ordinate pairs/triplets ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun xy-point (x y)
+  "Make an x-y point."
+  (vector x y))
+
+(defun xyz-point (x y z)
+  "Make an x-y-z point."
+  (vector x y z))
+
+(defun x-coord (v)
+  "Return the x part of vector V."
+  (aref v 0))
+
+(defun y-coord (v)
+  "Return the y part of vector V."
+  (aref v 1))
+
+(defun z-coord (v)
+  "Return the z part of vector V."
+  (aref v 2))
+
+(defun x-distance (v1 v2)
+  "Return the horizontal distance between V1 and V2."
+  (- (x-coord v2) (x-coord v1)))
+
+(defun y-distance (v1 v2)
+  "Return the vertical distance between V1 and V2."
+  (- (y-coord v2) (y-coord v1)))
+
+(defun z-distance (v1 v2)
+  "Return the out-of-plane distance between V1 and V2."
+  (- (z-coord v2) (z-coord v1)))
+
+(defun distance (v1 v2)
+  "Return the distance between V1 and V2."
+  (cond
+   ((and (numberp v1) (numberp v2))
+    (- v2 v1))
+   ((and (vectorp v1) (= (length v1) 2)
+	 (vectorp v2) (= (length v2) 2))
+    (sqrt (+ (expt (x-distance v1 v2) 2.0)
+	     (expt (y-distance v1 v2) 2.0))))
+   ((and (vectorp v1) (= (length v1) 3)
+	 (vectorp v2) (= (length v2) 3))
+    (expt (+ (expt (x-distance v1 v2))
+	     (expt (y-distance v1 v2))
+	     (expt (z-distance v1 v2))) -3))
+   (t (error "Cannot calculate distance between %S and %S"))))
+
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Naming elements ;;
 ;;;;;;;;;;;;;;;;;;;;;
@@ -457,7 +509,9 @@ An optional LABEL may be given.")
   ;; todo: allow parameters to be based on a centre position
   (let* ((bottom (cad-parameter parameters 'bottom
 				'(- top height)
-				'(-/2 y-centre height)))
+				'(-/2 y-centre height)
+				'(y-coord bottom-left-corner)
+				'(y-coord bottom-right-corner)))
 	 (height (cad-parameter parameters 'height
 				'(- top bottom)
 				'(*2- y-centre bottom)
