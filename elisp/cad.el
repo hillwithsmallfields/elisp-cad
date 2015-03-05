@@ -190,11 +190,17 @@ OTHER-WAYS is a list of ways of deducing it."
 	      ;; (message "argvals=%S; with and = %S" argvals (list 'and argvals))
 	      (when (eval (cons 'and argvals)) ; i.e. all non-nil; can't use `apply' on `and' as it's a special forma
 		(throw 'done (apply other-op argvals))))))
-	(error "No suitable combination of parameters was given: need any of %s to be found in %S"
+	(message "No suitable combination of parameters was given: need any of %s to be found in %S"
 	       (mapconcat (lambda (descr)
 			    (format "%s and %s" (cadr descr) (caddr descr)))
 			  other-ways ", or ")
-	       proplist))))
+	       proplist)
+	nil)))
+
+(defun fill-in (if-given op &rest opargs)
+  "If IF-GIVEN is given, return it, otherwise apply OP to OPARGS."
+  (or if-given
+      (apply op opargs)))
 
 (defun -/2 (from difference)
   "Return the result of starting at FROM and removing half the DIFFERENCE.
@@ -537,11 +543,25 @@ An optional LABEL may be given.")
 			       '(x-coord bottom-right-corner)
 			       '(x-coord top-right-corner)))
 	 (label (cad-get-parameter parameters 'name)))
+
     (if label
 	`(progn
+	   (setq height (fill-in height '- top bottom)
+		 width (fill-in width '- right left)
+		 top (fill-in top '+ bottom height)
+		 right (fill-in right '+ left width)
+		 bottom (fill-in bottom '- top height)
+		 left (fill-in left '- right width))
 	   (cad-set-edges ,label ,left ,bottom, ,right ,top)
 	   (cad-rectangle ,left ,bottom ,width ,height ,label))
-      `(cad-rectangle ,left ,bottom ,width ,height ,label))))
+      `(progn
+	 (setq height (fill-in height '- top bottom)
+	       width (fill-in width '- right left)
+	       top (fill-in top '+ bottom height)
+	       right (fill-in right '+ left width)
+	       bottom (fill-in bottom '- top height)
+	       left (fill-in left '- right width))
+	 (cad-rectangle ,left ,bottom ,width ,height ,label)))))
 
 (defmodel cad-rounded-rectangle (left bottom width height radius &optional label)
   "Draw a rounded rectangle at LEFT BOTTOM, of WIDTH and HEIGHT and corner RADIUS.
@@ -578,9 +598,25 @@ An optional LABEL may be given.")
 			       '(x-coord top-right-corner)))
 	 (radius (cad-get-parameter parameters 'radius))
 	 (label (cad-get-parameter parameters 'name)))
-    `(progn
-       (cad-set-edges ,label ,left ,bottom, ,right ,top)
-       (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label))))
+    (if label
+	`(progn
+           (setq height (fill-in height '- top bottom)
+		 width (fill-in width '- right left)
+		 top (fill-in top '+ bottom height)
+		 right (fill-in right '+ left width)
+		 bottom (fill-in bottom '- top height)
+		 left (fill-in left '- right width))
+	   (cad-set-edges ,label ,left ,bottom, ,right ,top)
+	   (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label))
+      '(progn
+	 (setq height (fill-in height '- top bottom)
+	       width (fill-in width '- right left)
+	       top (fill-in top '+ bottom height)
+	       right (fill-in right '+ left width)
+	       bottom (fill-in bottom '- top height)
+	       left (fill-in left '- right width))
+	 (cad-set-edges ,label ,left ,bottom, ,right ,top)
+	 (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label)))))
 
 (defmodel cad-arc (cx cy r a1 a2 &optional label)
   "Draw an arc centred at CX CY of radius R between angles A1 and A2.")
