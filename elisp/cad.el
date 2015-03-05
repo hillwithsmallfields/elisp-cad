@@ -181,14 +181,15 @@ OTHER-WAYS is a list of ways of deducing it."
 	  (let ((other-op (car this-way))
 		(other-args (cdr this-way)))
 	    ;; (message "Trying %S: other-op=%S other-args=%S" this-way other-op other-args)
-	    (let (
-		  (argvals (mapcar (lambda (other-prop)
+	    (let ((argvals (mapcar (lambda (other-prop)
+				     (message "Trying other-prop=%S" other-prop)
 				     (if (symbolp other-prop)
 					 (eval (plist-get proplist other-prop))
 				       other-prop))
 				   other-args)))
 	      ;; (message "argvals=%S; with and = %S" argvals (list 'and argvals))
 	      (when (eval (cons 'and argvals)) ; i.e. all non-nil; can't use `apply' on `and' as it's a special forma
+		;; (message "Got usable combination")
 		(throw 'done (apply other-op argvals))))))
 	(message "No suitable combination of parameters was given: need any of %s to be found in %S"
 	       (mapconcat (lambda (descr)
@@ -280,6 +281,13 @@ For generating an edge co-ordinate from the centre and width or height."
   (put name 'elisp-cad-props
        (plist-put (plist-get name 'elisp-cad-props)
 		  key value)))
+
+(defun cad-set-edges (name left bottom right top)
+  "Declare that NAME has LEFT BOTTOM RIGHT TOP."
+  (cad-set-property name 'left left)
+  (cad-set-property name 'bottom bottom)
+  (cad-set-property name 'right right)
+  (cad-set-property name 'top top))
 
 (defun cad-property (name property)
   (plist-get (get name 'elisp-cad-props) property))
@@ -483,6 +491,7 @@ For use within the `shape' macro.")
 
 (defmacro moveto (&rest parameters)
   "Keyworded macro for moving to a point using PARAMETERS."
+  ;; todo: set the edges?
   `(apply-to-parameter-pair moveto-xy ,parameters))
 
 (defmodel lineto-xy (x y)
@@ -491,6 +500,7 @@ For use within the `shape' macro.")
 
 (defmacro lineto (&rest parameters)
   "Keyworded macro for drawing a line to a point using PARAMETERS."
+  ;; todo: set the edges
   `(apply-to-parameter-pair lineto-xy ,parameters))
 
 (defmodel cad-circle (r &optional label)
@@ -507,7 +517,10 @@ An optional LABEL may be given.")
 	 (radius (cad-parameter parameters 'radius
 				'(-/2 top bottom)
 				'(-/2 right left)))
-	 (label (cad-get-parameter parameters 'name))))) ; todo: finish this, using two possible deduction types
+	 (label (cad-get-parameter parameters 'name)))
+    ;; todo: finish this, using two possible deduction types
+    ;; todo: set the edges
+    ))
 
 (defmodel cad-rectangle (left bottom width height &optional label)
   "Draw a rectangle at LEFT BOTTOM, of WIDTH and HEIGHT.
@@ -524,7 +537,11 @@ An optional LABEL may be given.")
 	 (height (cad-parameter parameters 'height
 				'(- top bottom)
 				'(*2- y-centre bottom)
-				'(*2- top y-centre)))
+				'(*2- top y-centre)
+				'(y-distance top-left-corner bottom-left-corner)
+				'(y-distance top-left-corner bottom-right-corner)
+				'(y-distance top-right-corner bottom-left-corner)
+				'(y-distance top-right-corner bottom-right-corner)))
 	 (left (cad-parameter parameters 'left
 			      '(- right width)
 			      '(-/2 x-centre width)
@@ -533,7 +550,11 @@ An optional LABEL may be given.")
 	 (width (cad-parameter parameters 'width
 			       '(- right left)
 			       '(*2- right x-centre)
-			       '(*2- x-centre left)))
+			       '(*2- x-centre left)
+			       '(x-distance top-right-corner top-left-corner)
+			       '(x-distance top-right-corner bottom-left-corner)
+			       '(x-distance bottom-right-corner top-left-corner)
+			       '(x-distance bottom-right-corner bottom-left-corner)))
 	 (top (cad-parameter parameters 'top
 			     '(+ bottom height)
 			     '(y-coord top-left-corner)
@@ -543,24 +564,23 @@ An optional LABEL may be given.")
 			       '(x-coord bottom-right-corner)
 			       '(x-coord top-right-corner)))
 	 (label (cad-get-parameter parameters 'name)))
-
     (if label
 	`(progn
-	   (setq height (fill-in height '- top bottom)
-		 width (fill-in width '- right left)
-		 top (fill-in top '+ bottom height)
-		 right (fill-in right '+ left width)
-		 bottom (fill-in bottom '- top height)
-		 left (fill-in left '- right width))
-	   (cad-set-edges ,label ,left ,bottom, ,right ,top)
+	   (setq height (fill-in ,height '- ,top ,bottom)
+		 width (fill-in ,width '- ,right ,left)
+		 top (fill-in ,top '+ ,bottom ,height)
+		 right (fill-in ,right '+ ,left ,width)
+		 bottom (fill-in ,bottom '- ,top ,height)
+		 left (fill-in ,left '- ,right ,width))
+	   (cad-set-edges ,label ,left ,bottom ,right ,top)
 	   (cad-rectangle ,left ,bottom ,width ,height ,label))
       `(progn
-	 (setq height (fill-in height '- top bottom)
-	       width (fill-in width '- right left)
-	       top (fill-in top '+ bottom height)
-	       right (fill-in right '+ left width)
-	       bottom (fill-in bottom '- top height)
-	       left (fill-in left '- right width))
+	 (setq height (fill-in ,height '- ,top ,bottom)
+	       width (fill-in ,width '- ,right ,left)
+	       top (fill-in ,top '+ ,bottom ,height)
+	       right (fill-in ,right '+ ,left ,width)
+	       bottom (fill-in ,bottom '- ,top ,height)
+	       left (fill-in ,left '- ,right ,width))
 	 (cad-rectangle ,left ,bottom ,width ,height ,label)))))
 
 (defmodel cad-rounded-rectangle (left bottom width height radius &optional label)
@@ -569,7 +589,6 @@ An optional LABEL may be given.")
 
 (defmacro rounded-rectangle (&rest parameters)
   "Keyworded macro for rounded rectangle drawing using PARAMETERS."
-  ;; todo: allow parameters to be based on a centre position
   (let* ((bottom (cad-parameter parameters 'bottom
 				'(- top height)
 				'(-/2 y-centre height)
@@ -578,7 +597,11 @@ An optional LABEL may be given.")
 	 (height (cad-parameter parameters 'height
 				'(- top bottom)
 				'(*2- y-centre bottom)
-				'(*2- top y-centre)))
+				'(*2- top y-centre)
+				'(y-distance top-left-corner bottom-left-corner)
+				'(y-distance top-left-corner bottom-right-corner)
+				'(y-distance top-right-corner bottom-left-corner)
+				'(y-distance top-right-corner bottom-right-corner)))
 	 (left (cad-parameter parameters 'left
 			      '(- right width)
 			      '(-/2 x-centre width)
@@ -587,7 +610,11 @@ An optional LABEL may be given.")
 	 (width (cad-parameter parameters 'width
 			       '(- right left)
 			       '(*2- right x-centre)
-			       '(*2- x-centre left)))
+			       '(*2- x-centre left)
+			       '(x-distance top-right-corner top-left-corner)
+			       '(x-distance top-right-corner bottom-left-corner)
+			       '(x-distance bottom-right-corner top-left-corner)
+			       '(x-distance bottom-right-corner bottom-left-corner)))
 	 (top (cad-parameter parameters 'top
 			     '(+ bottom height)
 			     '(y-coord top-left-corner)
@@ -598,24 +625,25 @@ An optional LABEL may be given.")
 			       '(x-coord top-right-corner)))
 	 (radius (cad-get-parameter parameters 'radius))
 	 (label (cad-get-parameter parameters 'name)))
+    (message "in expander, bottom=%S height=%S left=%S width=%S top=%S right=%S radius=%S label=%S" bottom height left width top right radius label)
     (if label
 	`(progn
-           (setq height (fill-in height '- top bottom)
-		 width (fill-in width '- right left)
-		 top (fill-in top '+ bottom height)
-		 right (fill-in right '+ left width)
-		 bottom (fill-in bottom '- top height)
-		 left (fill-in left '- right width))
-	   (cad-set-edges ,label ,left ,bottom, ,right ,top)
+           (setq height (fill-in ,height '- ,top ,bottom)
+		 width (fill-in ,width '- ,right ,left)
+		 top (fill-in ,top '+ ,bottom ,height)
+		 right (fill-in ,right '+ ,left ,width)
+		 bottom (fill-in ,bottom '- ,top ,height)
+		 left (fill-in ,left '- ,right ,width))
+	   (cad-set-edges ,label ,left ,bottom ,right ,top)
 	   (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label))
-      '(progn
-	 (setq height (fill-in height '- top bottom)
-	       width (fill-in width '- right left)
-	       top (fill-in top '+ bottom height)
-	       right (fill-in right '+ left width)
-	       bottom (fill-in bottom '- top height)
-	       left (fill-in left '- right width))
-	 (cad-set-edges ,label ,left ,bottom, ,right ,top)
+      `(progn
+	 (setq height (fill-in ,height '- ,top ,bottom)
+	       width (fill-in ,width '- ,right ,left)
+	       top (fill-in ,top '+ ,bottom ,height)
+	       right (fill-in ,right '+ ,left ,width)
+	       bottom (fill-in ,bottom '- ,top ,height)
+	       left (fill-in ,left '- ,right ,width))
+	 (cad-set-edges ,label ,left ,bottom ,right ,top)
 	 (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label)))))
 
 (defmodel cad-arc (cx cy r a1 a2 &optional label)
