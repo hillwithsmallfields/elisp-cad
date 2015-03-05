@@ -1,6 +1,6 @@
 ;;; cad.el --- produce CAD files from Lisp code
 
-;; Copyright (C) 2014  John Sturdy
+;; Copyright (C) 2014, 2015  John Sturdy
 
 ;; Author: John Sturdy <john.sturdy@arm.com>
 ;; Keywords: convenience, hardware, languages
@@ -176,17 +176,20 @@ Must return a suitable transformation matrix for the output device.")
 OTHER-WAYS is a list of ways of deducing it."
   (or (plist-get proplist name)
       (catch 'done
-	(message "Trying to deduce %S from %S" name proplist)
+	;; (message "Trying to deduce %S from %S" name proplist)
 	(dolist (this-way other-ways)
 	  (let ((other-op (car this-way))
-		(other-a (cadr this-way))
-		(other-b (caddr this-way)))
-	    (message "Trying %S: other-op=%S other-a=%S other-b=%S" this-way other-op other-a other-b)
-	    (let ((a-val (eval (plist-get proplist other-a)))
-		  (b-val (eval (plist-get proplist other-b))))
-	      (message "a-val=%S b-val=%S" a-val b-val)
-	      (when (and a-val b-val)
-		(throw 'done (funcall other-op a-val b-val))))))
+		(other-args (cdr this-way)))
+	    ;; (message "Trying %S: other-op=%S other-args=%S" this-way other-op other-args)
+	    (let (
+		  (argvals (mapcar (lambda (other-prop)
+				     (if (symbolp other-prop)
+					 (eval (plist-get proplist other-prop))
+				       other-prop))
+				   other-args)))
+	      ;; (message "argvals=%S; with and = %S" argvals (list 'and argvals))
+	      (when (eval (cons 'and argvals)) ; i.e. all non-nil; can't use `apply' on `and' as it's a special forma
+		(throw 'done (apply other-op argvals))))))
 	(error "No suitable combination of parameters was given: need any of %s to be found in %S"
 	       (mapconcat (lambda (descr)
 			    (format "%s and %s" (cadr descr) (caddr descr)))
@@ -506,7 +509,7 @@ An optional LABEL may be given.")
 
 (defmacro rectangle (&rest parameters)
   "Keyworded macro for rectangle drawing using PARAMETERS."
-  ;; todo: allow parameters to be based on a centre position
+  ;; todo: ? make sure parameter evaluators can access already-found parameters --- should be OK given that elisp has dynamic scope?
   (let* ((bottom (cad-parameter parameters 'bottom
 				'(- top height)
 				'(-/2 y-centre height)
@@ -518,15 +521,21 @@ An optional LABEL may be given.")
 				'(*2- top y-centre)))
 	 (left (cad-parameter parameters 'left
 			      '(- right width)
-			      '(-/2 x-centre width)))
+			      '(-/2 x-centre width)
+			      '(x-coord bottom-left-corner)
+			      '(x-coord top-left-corner)))
 	 (width (cad-parameter parameters 'width
 			       '(- right left)
 			       '(*2- right x-centre)
 			       '(*2- x-centre left)))
 	 (top (cad-parameter parameters 'top
-			     '(+ bottom height)))
+			     '(+ bottom height)
+			     '(y-coord top-left-corner)
+			     '(y-coord top-right-corner)))
 	 (right (cad-parameter parameters 'right
-			       '(+ left width)))
+			       '(+ left width)
+			       '(x-coord bottom-right-corner)
+			       '(x-coord top-right-corner)))
 	 (label (cad-get-parameter parameters 'name)))
     (if label
 	`(progn
@@ -543,21 +552,35 @@ An optional LABEL may be given.")
   ;; todo: allow parameters to be based on a centre position
   (let* ((bottom (cad-parameter parameters 'bottom
 				'(- top height)
-				'(-/2 y-centre height)))
+				'(-/2 y-centre height)
+				'(y-coord bottom-left-corner)
+				'(y-coord bottom-right-corner)))
 	 (height (cad-parameter parameters 'height
 				'(- top bottom)
 				'(*2- y-centre bottom)
 				'(*2- top y-centre)))
 	 (left (cad-parameter parameters 'left
 			      '(- right width)
-			      '(-/2 x-centre width)))
+			      '(-/2 x-centre width)
+			      '(x-coord bottom-left-corner)
+			      '(x-coord top-left-corner)))
 	 (width (cad-parameter parameters 'width
 			       '(- right left)
 			       '(*2- right x-centre)
 			       '(*2- x-centre left)))
+	 (top (cad-parameter parameters 'top
+			     '(+ bottom height)
+			     '(y-coord top-left-corner)
+			     '(y-coord top-right-corner)))
+	 (right (cad-parameter parameters 'right
+			       '(+ left width)
+			       '(x-coord bottom-right-corner)
+			       '(x-coord top-right-corner)))
 	 (radius (cad-get-parameter parameters 'radius))
 	 (label (cad-get-parameter parameters 'name)))
-    `(cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label)))
+    `(progn
+       (cad-set-edges ,label ,left ,bottom, ,right ,top)
+       (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label))))
 
 (defmodel cad-arc (cx cy r a1 a2 &optional label)
   "Draw an arc centred at CX CY of radius R between angles A1 and A2.")
