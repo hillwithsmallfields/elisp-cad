@@ -82,13 +82,14 @@
 						width frame-width
 						height frame-height
 						radius 10)
-			     (rounded-rectangle x-centre frame-x-centre
+			     (rounded-rectangle name hole-for-tablet
+						x-centre frame-x-centre
 						y-centre frame-y-centre
 						width tablet-width
 						height tablet-height
 						radius 10)
 			     (rectangle left 67 
-					bottom (+ frame-bottom tablet-height)
+					bottom (bottom-of hole-for-tablet) ;; (+ frame-bottom tablet-height)
 					width 10 height 10)
 			     ))
 	   (translate 10 150
