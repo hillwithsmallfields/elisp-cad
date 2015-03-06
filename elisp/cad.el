@@ -200,6 +200,7 @@ OTHER-WAYS is a list of ways of deducing it."
 
 (defun fill-in (if-given op &rest opargs)
   "If IF-GIVEN is given, return it, otherwise apply OP to OPARGS."
+  (message "fill-in %S (%S %S)" if-given op opargs)
   (or if-given
       (apply op opargs)))
 
@@ -272,12 +273,32 @@ For generating an edge co-ordinate from the centre and width or height."
 ;; Naming elements ;;
 ;;;;;;;;;;;;;;;;;;;;;
 
+(defvar cad-symbols nil
+  "List of symbols on which we have set a cad property.")
+
 (defun cad-set-properties (name &rest props)
   "Indicate that NAME has PROPERTIES."
+  (add-to-list 'cad-symbols name)
   (put name 'elisp-cad-props props))
+
+(defun cad-get-properties (name)
+  "Return the cad properties of NAME."
+  (get name 'elisp-cad-props))
+
+(defun cad-list-symbols ()
+  "Display the symbols we have set properties on, with their properties."
+  (interactive)
+  (with-output-to-temp-buffer "*CAD properties*"
+    (dolist (symbol cad-symbols)
+      (let ((properties (cad-get-properties symbol)))
+	(princ (format "%s:\n" symbol))
+	(while properties
+	  (princ (format "  %s: %S\n" (car properties) (cadr properties)))
+	  (setq properties (cddr properties)))))))
 
 (defun cad-set-property (name key value)
   "Indicate that for NAME, KEY has VALUE."
+  (add-to-list 'cad-symbols name)
   (put name 'elisp-cad-props
        (plist-put (plist-get name 'elisp-cad-props)
 		  key value)))
@@ -292,17 +313,41 @@ For generating an edge co-ordinate from the centre and width or height."
 (defun cad-property (name property)
   (plist-get (get name 'elisp-cad-props) property))
 
-(defmacro top-of (ELTNAME)
-  "Return the top of the element called ELTNAME")
+(defmacro top-of (eltname)
+  "Return the top of the element called ELTNAME"
+  `(cad-property ',eltname 'top))
 
-(defmacro bottom-of (ELTNAME)
-  "Return the bottom of the element called ELTNAME")
+(defmacro bottom-of (eltname)
+  "Return the bottom of the element called ELTNAME"
+  `(cad-property ',eltname 'bottom))
 
-(defmacro left-of (ELTNAME)
-  "Return the left of the element called ELTNAME")
+(defmacro left-of (eltname)
+  "Return the left of the element called ELTNAME"
+  `(cad-property ',eltname 'left))
 
-(defmacro right-of (ELTNAME)
-  "Return the right of the element called ELTNAME")
+(defmacro right-of (eltname)
+  "Return the right of the element called ELTNAME"
+  `(cad-property ',eltname 'right))
+
+(defmacro top-left-of (eltname)
+  "Return the top left of the element called ELTNAME"
+  `(xy-point (cad-property ',eltname 'left)
+	     (cad-property ',eltname 'top)))
+
+(defmacro top-right-of (eltname)
+  "Return the top right of the element called ELTNAME"
+  `(xy-point (cad-property ',eltname 'right)
+	     (cad-property ',eltname 'top)))
+
+(defmacro bottom-left-of (eltname)
+  "Return the bottom left of the element called ELTNAME"
+  `(xy-point (cad-property ',eltname 'left)
+	     (cad-property ',eltname 'bottom)))
+
+(defmacro bottom-right-of (eltname)
+  "Return the bottom right of the element called ELTNAME"
+  `(xy-point (cad-property ',eltname 'right)
+	     (cad-property ',eltname 'bottom)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Drawing structure ;;
@@ -323,6 +368,13 @@ The drawing is held on the 'cad-drawing property of each symbol.")
 	     ,@parts
 	     (cad-postamble)))
      (add-to-list 'cad-drawings '(,name))))
+
+(defun cad-display-drawing (symbol)
+  "Display the drawing attached to SYMBOL."
+  (interactive (list (intern (completing-read "Display drawing source: " cad-drawings nil t))))
+  (let ((drawing-code (get symbol 'cad-drawing)))
+    (with-output-to-temp-buffer (format "*drawing %S*" symbol)
+      (pp drawing-code))))
 
 (defun non-string-car (l)
   "Return the car of L, unless it is a string, in which case return the cadr."
@@ -566,22 +618,12 @@ An optional LABEL may be given.")
 	 (label (cad-get-parameter parameters 'name)))
     (if label
 	`(progn
-	   (setq height (fill-in ,height '- ,top ,bottom)
-		 width (fill-in ,width '- ,right ,left)
-		 top (fill-in ,top '+ ,bottom ,height)
-		 right (fill-in ,right '+ ,left ,width)
-		 bottom (fill-in ,bottom '- ,top ,height)
-		 left (fill-in ,left '- ,right ,width))
-	   (cad-set-edges ,label ,left ,bottom ,right ,top)
-	   (cad-rectangle ,left ,bottom ,width ,height ,label))
+	   (setq top (fill-in ,top '+ ,bottom ,height)
+		 right (fill-in ,right '+ ,left ,width))
+	   (cad-set-edges ',label ,left ,bottom ,right ,top)
+	   (cad-rectangle ,left ,bottom ,width ,height ',label))
       `(progn
-	 (setq height (fill-in ,height '- ,top ,bottom)
-	       width (fill-in ,width '- ,right ,left)
-	       top (fill-in ,top '+ ,bottom ,height)
-	       right (fill-in ,right '+ ,left ,width)
-	       bottom (fill-in ,bottom '- ,top ,height)
-	       left (fill-in ,left '- ,right ,width))
-	 (cad-rectangle ,left ,bottom ,width ,height ,label)))))
+	 (cad-rectangle ,left ,bottom ,width ,height)))))
 
 (defmodel cad-rounded-rectangle (left bottom width height radius &optional label)
   "Draw a rounded rectangle at LEFT BOTTOM, of WIDTH and HEIGHT and corner RADIUS.
@@ -628,23 +670,12 @@ An optional LABEL may be given.")
     (message "in expander, bottom=%S height=%S left=%S width=%S top=%S right=%S radius=%S label=%S" bottom height left width top right radius label)
     (if label
 	`(progn
-           (setq height (fill-in ,height '- ,top ,bottom)
-		 width (fill-in ,width '- ,right ,left)
-		 top (fill-in ,top '+ ,bottom ,height)
-		 right (fill-in ,right '+ ,left ,width)
-		 bottom (fill-in ,bottom '- ,top ,height)
-		 left (fill-in ,left '- ,right ,width))
-	   (cad-set-edges ,label ,left ,bottom ,right ,top)
-	   (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label))
+           (setq top (fill-in ,top '+ ,bottom ,height)
+		 right (fill-in ,right '+ ,left ,width))
+	   (cad-set-edges ',label ,left ,bottom ,right ,top)
+	   (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ',label))
       `(progn
-	 (setq height (fill-in ,height '- ,top ,bottom)
-	       width (fill-in ,width '- ,right ,left)
-	       top (fill-in ,top '+ ,bottom ,height)
-	       right (fill-in ,right '+ ,left ,width)
-	       bottom (fill-in ,bottom '- ,top ,height)
-	       left (fill-in ,left '- ,right ,width))
-	 (cad-set-edges ,label ,left ,bottom ,right ,top)
-	 (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius ,label)))))
+	 (cad-rounded-rectangle ,left ,bottom ,width ,height ,radius)))))
 
 (defmodel cad-arc (cx cy r a1 a2 &optional label)
   "Draw an arc centred at CX CY of radius R between angles A1 and A2.")
