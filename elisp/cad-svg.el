@@ -132,14 +132,14 @@
 		      r
 		      (svg-fill-stroke)
 		      (if label
-			  (concat " <!--" label "-->")
+			  (concat " <!--" (symbol-name label) "-->")
 			""))
 	    (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" %s/>%s\n"
 		    (tx xc yc) (ty xc yc)
 		    (* (/ (+ xx yy) 2) r)
 		    (svg-fill-stroke)
 		    (if label
-			(concat " <!--" label "-->")
+			(concat " <!--" (symbol-name label) "-->")
 		      "")))))
 
 (defmodal cad-rectangle nxml-mode (left bottom width height &optional label)
@@ -150,7 +150,7 @@
 		      width height
 		      (svg-fill-stroke)
 		      (if label
-			  (concat " <!--" label "-->")
+			  (concat " <!--" (symbol-name label) "-->")
 			""))
 	    (let ((x2 (+ left w))
 		  (y2 (+ bottom h)))
@@ -161,7 +161,7 @@
 		      (tx x2 bottom) (ty x2 bottom)
 		      (svg-fill-stroke)
 		      (if label
-			  (concat " <!--" label "-->")
+			  (concat " <!--" (symbol-name label) "-->")
 			""))))))
 
 (defmodal cad-rounded-rectangle nxml-mode (left bottom width height radius &optional label)
@@ -186,7 +186,7 @@
 			radius radius direction left bottom2
 			(svg-fill-stroke)
 			(if label
-			    (concat " <!--" label "-->")
+			    (concat " <!--" (symbol-name label) "-->")
 			  "")))
 	    (format "Not yet implemented"))))
 
@@ -214,7 +214,7 @@
 		    x2 y2
 		    (svg-fill-stroke)
 		    (if label
-			(concat " <!--" label "-->")
+			(concat " <!--" (symbol-name label) "-->")
 		      "")))))
 
 (provide 'cad-svg)
