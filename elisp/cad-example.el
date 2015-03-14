@@ -89,7 +89,7 @@
 						height tablet-height
 						radius 10)
 			     (rectangle left 67 
-					bottom (bottom-of hole-for-tablet) ;; (+ frame-bottom tablet-height)
+					top (bottom-of hole-for-tablet)
 					width 10 height 10)
 			     ))
 	   (translate 10 150
