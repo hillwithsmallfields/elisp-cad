@@ -182,7 +182,7 @@ OTHER-WAYS is a list of ways of deducing it."
 		(other-args (cdr this-way)))
 	    ;; (message "Trying %S: other-op=%S other-args=%S" this-way other-op other-args)
 	    (let ((argvals (mapcar (lambda (other-prop)
-				     (message "Trying other-prop=%S" other-prop)
+				     ;; (message "Trying other-prop=%S" other-prop)
 				     (if (symbolp other-prop)
 					 (eval (plist-get proplist other-prop))
 				       other-prop))
@@ -192,10 +192,10 @@ OTHER-WAYS is a list of ways of deducing it."
 		;; (message "Got usable combination")
 		(throw 'done (apply other-op argvals))))))
 	(message "No suitable combination of parameters was given: need any of %s to be found in %S"
-	       (mapconcat (lambda (descr)
-			    (format "%s and %s" (cadr descr) (caddr descr)))
-			  other-ways ", or ")
-	       proplist)
+		 (mapconcat (lambda (descr)
+			      (format "%s and %s" (cadr descr) (caddr descr)))
+			    other-ways ", or ")
+		 proplist)
 	nil)))
 
 (defun fill-in (if-given op &rest opargs)
@@ -208,6 +208,11 @@ OTHER-WAYS is a list of ways of deducing it."
   "Return the result of starting at FROM and removing half the DIFFERENCE.
 For generating an edge co-ordinate from the centre and width or height."
   (- from (/ difference 2.0)))
+
+(defun +/2 (from difference)
+  "Return the result of starting at FROM and adding half the DIFFERENCE.
+For generating an edge co-ordinate from the centre and width or height."
+  (+ from (/ difference 2.0)))
 
 (defun *2- (a b)
   "Return twice the result of from A subtracting B."
@@ -298,10 +303,13 @@ For generating an edge co-ordinate from the centre and width or height."
 
 (defun cad-set-property (name key value)
   "Indicate that for NAME, KEY has VALUE."
+  (message "Setting property %S of name %S to %S" key name value)
   (add-to-list 'cad-symbols name)
   (put name 'elisp-cad-props
-       (plist-put (plist-get name 'elisp-cad-props)
-		  key value)))
+       (plist-put (get name 'elisp-cad-props)
+		  key value))
+  (message "Name %S now has cad properties %S" name (cad-get-properties name))
+  )
 
 (defun cad-set-edges (name left bottom right top)
   "Declare that NAME has LEFT BOTTOM RIGHT TOP."
@@ -311,7 +319,10 @@ For generating an edge co-ordinate from the centre and width or height."
   (cad-set-property name 'top top))
 
 (defun cad-property (name property)
-  (plist-get (get name 'elisp-cad-props) property))
+  "For NAME, get PROPERTY."
+  (let ((result (plist-get (get name 'elisp-cad-props) property)))
+  (message "Getting property %S of name %S ==> %S" property name result)
+    result))
 
 (defmacro top-of (eltname)
   "Return the top of the element called ELTNAME"
@@ -609,10 +620,12 @@ An optional LABEL may be given.")
 			       '(x-distance bottom-right-corner bottom-left-corner)))
 	 (top (cad-parameter parameters 'top
 			     '(+ bottom height)
+			     '(+/2 y-centre height)
 			     '(y-coord top-left-corner)
 			     '(y-coord top-right-corner)))
 	 (right (cad-parameter parameters 'right
 			       '(+ left width)
+			       '(+/2 x-centre width)
 			       '(x-coord bottom-right-corner)
 			       '(x-coord top-right-corner)))
 	 (label (cad-get-parameter parameters 'name)))
@@ -659,15 +672,17 @@ An optional LABEL may be given.")
 			       '(x-distance bottom-right-corner bottom-left-corner)))
 	 (top (cad-parameter parameters 'top
 			     '(+ bottom height)
+			     '(+/2 y-centre height)
 			     '(y-coord top-left-corner)
 			     '(y-coord top-right-corner)))
 	 (right (cad-parameter parameters 'right
 			       '(+ left width)
+			       '(+/2 x-centre width)
 			       '(x-coord bottom-right-corner)
 			       '(x-coord top-right-corner)))
 	 (radius (cad-get-parameter parameters 'radius))
 	 (label (cad-get-parameter parameters 'name)))
-    (message "in expander, bottom=%S height=%S left=%S width=%S top=%S right=%S radius=%S label=%S" bottom height left width top right radius label)
+    (message "in expander for rounded-rectangle, bottom=%S height=%S left=%S width=%S top=%S right=%S radius=%S label=%S" bottom height left width top right radius label)
     (if label
 	`(progn
            (setq top (fill-in ,top '+ ,bottom ,height)
