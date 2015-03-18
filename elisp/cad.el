@@ -22,7 +22,6 @@
 
 ;; todo: keep a currentpoint, like PostScript
 ;; todo: handle coordinate system changes in top-of etc, probably have to keep them in absolute coordinates
-;; todo: allow coordinate pairs/triplets
 
 ;;; Code:
 
@@ -601,7 +600,6 @@ An optional LABEL may be given.")
 
 (defmacro rectangle (&rest parameters)
   "Keyworded macro for rectangle drawing using PARAMETERS."
-  ;; todo: ? make sure parameter evaluators can access already-found parameters --- should be OK given that elisp has dynamic scope?
   (let* ((bottom (cad-parameter parameters 'bottom
 				'(- top height)
 				'(-/2 y-centre height)
