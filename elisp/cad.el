@@ -305,6 +305,7 @@ For generating an edge co-ordinate from the centre and width or height."
 
 (defun cad-set-edges (name left bottom right top)
   "Declare that NAME has LEFT BOTTOM RIGHT TOP."
+  (message "Setting %S's co-ordinates to %S %S %S %S" name left bottom right top)
   (cad-set-property name 'left left)
   (cad-set-property name 'bottom bottom)
   (cad-set-property name 'right right)
@@ -618,10 +619,12 @@ An optional LABEL may be given.")
 			       '(x-distance bottom-right-corner bottom-left-corner)))
 	 (top (cad-parameter parameters 'top
 			     '(+ bottom height)
+			     '(+/2 y-centre height)
 			     '(y-coord top-left-corner)
 			     '(y-coord top-right-corner)))
 	 (right (cad-parameter parameters 'right
 			       '(+ left width)
+			       '(+/2 x-centre width)
 			       '(x-coord bottom-right-corner)
 			       '(x-coord top-right-corner)))
 	 (label (cad-get-parameter parameters 'name)))
@@ -668,10 +671,12 @@ An optional LABEL may be given.")
 			       '(x-distance bottom-right-corner bottom-left-corner)))
 	 (top (cad-parameter parameters 'top
 			     '(+ bottom height)
+			     '(+/2 y-centre height)
 			     '(y-coord top-left-corner)
 			     '(y-coord top-right-corner)))
 	 (right (cad-parameter parameters 'right
 			       '(+ left width)
+			       '(+/2 x-centre width)
 			       '(x-coord bottom-right-corner)
 			       '(x-coord top-right-corner)))
 	 (radius (cad-get-parameter parameters 'radius))
