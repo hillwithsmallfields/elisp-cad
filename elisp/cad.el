@@ -20,9 +20,9 @@
 
 ;;; Commentary:
 
-;; todo: fill in top-of etc and add height-of and width-of --- must think about handling coordinate system changes, probably have to keep them in absolute coordinates
+;; todo: keep a currentpoint, like PostScript
+;; todo: handle coordinate system changes in top-of etc, probably have to keep them in absolute coordinates
 ;; todo: allow coordinate pairs/triplets
-;; todo: add top-left-corner-of etc
 
 ;;; Code:
 
@@ -329,6 +329,14 @@ For generating an edge co-ordinate from the centre and width or height."
   "Return the right of the element called ELTNAME"
   `(cad-property ',eltname 'right))
 
+(defmacro width-of (eltname)
+  `(- (cad-property ',eltname 'right)
+      (cad-property ',eltname 'left)))
+
+(defmacro height-of (eltname)
+  `(- (cad-property ',eltname 'top)
+      (cad-property ',eltname 'bottom)))
+
 (defmacro top-left-of (eltname)
   "Return the top left of the element called ELTNAME"
   `(xy-point (cad-property ',eltname 'left)
@@ -530,21 +538,22 @@ For use as the 'action' of the `shape' macro.")
   "Move to X Y.
 For use within the `shape' macro.")
 
-(defmacro apply-to-parameter-pair (function parameters)
-  "Apply FUNCTION to the first two points from PARAMETERS."
+(defmacro apply-to-first-point (function parameters)
+  "Apply FUNCTION to the first point from PARAMETERS.
+Return the remaining parameters."
   (let ((first-param (car parameters)))
     (if (vectorp first-param)
 	`'(progn
-	   (,function ,(aref first-param 0) ,(aref first-param 1))
-	   ',(cdr parameters))
+	    (,function ,(aref first-param 0) ,(aref first-param 1))
+	    ',(cdr parameters))
       `'(progn
-	 (,function ,first-param ,(cadr parameters))
-	 ',(cddr parameters)))))
+	  (,function ,first-param ,(cadr parameters))
+	  ',(cddr parameters)))))
 
 (defmacro moveto (&rest parameters)
   "Keyworded macro for moving to a point using PARAMETERS."
   ;; todo: set the edges?
-  `(apply-to-parameter-pair moveto-xy ,parameters))
+  `(apply-to-first-point moveto-xy ,parameters))
 
 (defmodel lineto-xy (x y)
   "Draw a line from the current point to X Y.
@@ -553,7 +562,7 @@ For use within the `shape' macro.")
 (defmacro lineto (&rest parameters)
   "Keyworded macro for drawing a line to a point using PARAMETERS."
   ;; todo: set the edges
-  `(apply-to-parameter-pair lineto-xy ,parameters))
+  `(apply-to-first-point lineto-xy ,parameters))
 
 (defmodel cad-circle (r &optional label)
   "Draw a circle at the current point, of radius R.
