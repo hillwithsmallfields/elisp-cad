@@ -1,6 +1,6 @@
 ;;; cad-svg.el --- svg drawing functions for elisp-cad
 
-;; Copyright (C) 2014  John Sturdy
+;; Copyright (C) 2014, 2015  John Sturdy
 
 ;; Author: John Sturdy <john.sturdy@arm.com>
 ;; Keywords: multimedia
@@ -105,7 +105,9 @@
 	      "</g>\n"
 	    "<!-- end colour -->\n")))
 
-(defmodal newpath nxml-mode ())
+(defmodal newpath nxml-mode ()
+  (setq xc nil
+	yc nil))
 
 (defmodal cutpath nxml-mode ())
 
@@ -116,7 +118,11 @@
 (defmodal moveto nxml-mode (x y)
   (setq xc x yc y))
 
-(defmodal lineto nxml-mode (x y))
+(defmodal lineto nxml-mode (x y)
+  (insert cad-svg-prefix
+	  (format "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\"/>\n"
+		  xc yx x y))
+  (setq xc x yc y))
 
 (defun svg-fill-stroke ()
   "Return the style string for an svg shape."
@@ -125,6 +131,7 @@
     (format "stroke=\"%s\" fill=\"none\"" cad-colour)))
 
 (defmodal cad-circle nxml-mode (r &optional label)
+  ;; todo: change the parameters this takes, to suit the top-level circle command
   (insert cad-svg-prefix
 	  (if cad-use-target-transforms
 	      (format "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" %s/>%s\n"
