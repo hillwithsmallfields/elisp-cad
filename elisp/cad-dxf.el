@@ -1,6 +1,6 @@
 ;;; cad-dxf.el --- dxf drawing functions for elisp-cad
 
-;; Copyright (C) 2014  John Sturdy
+;; Copyright (C) 2014, 2015  John Sturdy
 
 ;; Author: John Sturdy <john.sturdy@arm.com>
 ;; Keywords: multimedia
@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(defmodal cad-preamble dxf-mode (width height)
+(defmodal cad-preamble dxf-mode (width height unit)
   (error "Drawing to dxf not yet implemented")
   (ident-matrix))
 

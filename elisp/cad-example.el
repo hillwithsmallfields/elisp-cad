@@ -1,6 +1,6 @@
 ;;; cad-example.el --- examples and tests for cad.el
 
-;; Copyright (C) 2014  John Sturdy
+;; Copyright (C) 2014, 2015  John Sturdy
 
 ;; Author: John Sturdy <john.sturdy@arm.com>
 ;; Keywords: multimedia
@@ -26,43 +26,43 @@
 
 (require 'cad)
 
-(drawing just-a-circle cutpath 400 400
+(drawing just-a-circle cutpath 400 400 pixels
 	 (shape (moveto 200 200)
 		(cad-circle 100)))
 
-(drawing just-a-rectangle cutpath 400 400
+(drawing just-a-rectangle cutpath 400 400 pixels
 	 (shape (moveto 200 200)
 		(cad-rectangle 150 100)))
 
-(drawing fancy-rectangle cutpath 400 400
+(drawing fancy-rectangle cutpath 400 400 pixels
 	 (rectangle width 200 height 200 left 100 top 300))
 
-(drawing stacked-rectangles cutpath 800 1200
+(drawing stacked-rectangles cutpath 800 1200 pixels
 	 (shape (rectangle left 100 bottom 100 height 200 width 600)
 		(rectangle left 150 bottom 300 height 100 width 500)
 		(rectangle left 200 bottom 400 height 50 width 400)))
 
-(drawing tilted-rectangle cutpath 400 400
+(drawing tilted-rectangle cutpath 400 400 pixels
 	 (shape (rotate 15
 			(moveto 200 200)
 			(cad-rectangle 150 100 "tilted"))))
 
-(drawing arc-fragment cutpath 400 400
+(drawing arc-fragment cutpath 400 400 pixels
 	 (shape (moveto 200 200)
 		(cad-circle 50)
 		(cad-arc 200 200 100 0 60)))
 
-(drawing many-arcs cutpath 1400 1400
+(drawing many-arcs cutpath 1400 1400 pixels
 	 (shape (rectangle bottom 10 left 10 width 200 height 20))
 	 (dotimes (i 12)
 	   (dotimes (j 12)
 	     (shape (cad-arc (* j 50) (* i 50) 12 (* j 30) (* i 30))))))
 
-(drawing rounded-rectangle-test cutpath 600 600
+(drawing rounded-rectangle-test cutpath 600 600 pixels
 	 (shape
 	  (rounded-rectangle bottom 100 left 100 top 300 right 400 radius 25)))
 
-(drawing phablet-surround cutpath 300 300
+(drawing phablet-surround cutpath 300 300 millimetres
 	 (let* ((frame-width 230)
 		(frame-height 130)
 		(frame-x-centre (/ frame-width 2))

@@ -150,9 +150,9 @@ They can override this by defining their own action.")
 ;; support functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmodel cad-preamble (width height)
+(defmodel cad-preamble (width height unit)
   ;; todo: setting of units / scale
-  "Function to run at the start of rendering a drawing of HEIGHT and WIDTH.
+  "Function to run at the start of rendering a drawing of HEIGHT and WIDTH, of UNIT.
 Must return a suitable transformation matrix for the output device.")
 
 (defmodel cad-postamble ()
@@ -376,8 +376,8 @@ For generating an edge co-ordinate from the centre and width or height."
   "List of symbols naming defined drawings.
 The drawing is held on the 'cad-drawing property of each symbol.")
 
-(defmacro drawing (name action width height &rest parts)
-  "Define a drawing called NAME using ACTION of WIDTH and HEIGHT, made of PARTS."
+(defmacro drawing (name action width height unit &rest parts)
+  "Define a drawing called NAME using ACTION of WIDTH and HEIGHT of UNIT, made of PARTS."
   `(progn
      (put ',name 'cad-drawing
 	  '(let* ((default-action ',action)

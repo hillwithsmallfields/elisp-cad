@@ -1,6 +1,6 @@
 ;;; cad-ps.el --- ps drawing functions for elisp-cad
 
-;; Copyright (C) 2014  John Sturdy
+;; Copyright (C) 2014, 2015  John Sturdy
 
 ;; Author: John Sturdy <john.sturdy@arm.com>
 ;; Keywords: multimedia
@@ -24,8 +24,9 @@
 
 ;;; Code:
 
-(defmodal cad-preamble ps-mode (width height)
+(defmodal cad-preamble ps-mode (width height unit)
   (insert "%!PS\n")
+  ;; todo: handle unit
   (ident-matrix))
 
 (defmodal cad-postamble ps-mode ()

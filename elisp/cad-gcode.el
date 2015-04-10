@@ -1,6 +1,6 @@
 ;;; cad-gcode.el --- gcode drawing functions for elisp-cad
 
-;; Copyright (C) 2014  John Sturdy
+;; Copyright (C) 2014, 2015  John Sturdy
 
 ;; Author: John Sturdy <john.sturdy@arm.com>
 ;; Keywords: multimedia
@@ -24,8 +24,8 @@
 
 ;;; Code:
 
-(defmodal cad-preamble gcode-mode (width height)
-  (insert (format "; drawing with width=%d and height=%d\n" width height))
+(defmodal cad-preamble gcode-mode (width height unit)
+  (insert (format "; drawing with width=%f and height=%f of %s\n" width height unit))
   (ident-matrix))
 
 (defmodal cad-postamble gcode-mode ()
